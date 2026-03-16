@@ -7,7 +7,7 @@ for database access. Also handles initial table creation.
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from config import DATABASE_URL
+from config import DATABASE_URL, LOG_LEVEL
 
 from database.base import Base
 from models.candidate import Candidate
@@ -17,7 +17,7 @@ from models.qualification import Qualification
 from models.qualification import QualificationField
 from models.skill import Skill
 
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(DATABASE_URL, echo=(LOG_LEVEL == "DEBUG"))
 SESSION_LOCAL = sessionmaker(autoflush=False, bind=engine)
 Base.metadata.create_all(bind=engine)
 
