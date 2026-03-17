@@ -23,6 +23,7 @@ class Candidate(Base):
         phone: Candidate's phone number.
         bio: Short biography or summary.
         github_url: URL to the candidate's GitHub profile.
+        linkedin_url: URL to the candidate's LinkedIn profile.
     """
 
     __tablename__ = "candidate"
@@ -36,3 +37,4 @@ class Candidate(Base):
     phone: Mapped[str | None] = mapped_column()
     bio: Mapped[str | None] = mapped_column(Text)
     github_url: Mapped[str | None] = mapped_column()
+    linkedin_url: Mapped[str | None] = mapped_column()
