@@ -1,14 +1,23 @@
+"""Configuration management for AditusAI application.
+
+This module provides settings management using Pydantic BaseSettings,
+loading configuration from environment variables and .env files.
+"""
+
 import logging
-import os
-from dotenv import load_dotenv
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Load variables from .env file
-load_dotenv()
-
 
 class Settings(BaseSettings):
+    """Application settings loaded from environment variables.
+
+    Attributes:
+        database_url: Database connection URL.
+        log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).
+        anthropic_api_key: API key for Anthropic LLM service.
+        model: Model identifier for the LLM.
+    """
 
     # Database config
     database_url: str
@@ -18,7 +27,7 @@ class Settings(BaseSettings):
 
     # LLM config
     anthropic_api_key: SecretStr
-    model: str = "cclaude-haiku-4-5-20251001"
+    model: str = "claude-haiku-4-5-20251001"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
@@ -28,6 +37,7 @@ settings = Settings()
 
 
 def setup_logging():
+    """Configure application logging with settings from the environment."""
     logging.basicConfig(
         level=settings.log_level,
         format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
