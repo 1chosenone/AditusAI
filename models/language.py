@@ -1,23 +1,14 @@
 """
-This module defines the Language model and the LanguageProficiency enum.
+This module defines the Language model.
 
 Language represents a language that a candidate knows, along with
 their proficiency level.
 """
 
-import enum
 from sqlalchemy import Enum, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped
 from database.base import Base
-
-
-class LanguageProficiency(enum.Enum):
-    """Enumeration of language proficiency levels."""
-
-    BEGINNER = "beginner"
-    INTERMEDIATE = "Intermediate"
-    ADVANCED = "advanced"
-    PROFICIENT = "proficient"
+from enums import LanguageProficiency
 
 
 class Language(Base):

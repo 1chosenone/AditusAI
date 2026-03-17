@@ -1,65 +1,14 @@
 """
-This module defines the Qualification model and related enums.
+This module defines the Qualification model.
 
 Qualification represents a candidate's educational qualifications,
 certifications, and credentials along with their field of study.
 """
 
-import enum
 from sqlalchemy import Enum, ForeignKey, Text
 from sqlalchemy.orm import mapped_column, Mapped
 from database.base import Base
-
-
-class QualificationTypeEnum(enum.Enum):
-    """
-    Enum representing different types of candidate qualifications or credentials.
-    """
-
-    BACHELOR = "Bachelor"
-    MASTER = "Master"
-    DOCTORAL = "Doctoral"
-    DIPLOMA = "Diploma"
-    CERTIFICATION = "Certification"
-    LICENSE = "License"
-    AWARD = "Award"
-    OTHER = "Other"
-
-
-class FieldOfStudyEnum(enum.Enum):
-    """
-    Enum representing various fields of study or disciplines for candidate qualifications.
-    """
-
-    COMPUTER_SCIENCE = "Computer Science"
-    INFORMATION_TECHNOLOGY = "Information Technology"
-    ENGINEERING = "Engineering"
-    ELECTRICAL_ENGINEERING = "Electrical Engineering"
-    MECHANICAL_ENGINEERING = "Mechanical Engineering"
-    CIVIL_ENGINEERING = "Civil Engineering"
-    BUSINESS_ADMINISTRATION = "Business Administration"
-    FINANCE = "Finance"
-    ACCOUNTING = "Accounting"
-    MARKETING = "Marketing"
-    ECONOMICS = "Economics"
-    LAW = "Law"
-    MEDICINE = "Medicine"
-    NURSING = "Nursing"
-    PHARMACY = "Pharmacy"
-    BIOLOGY = "Biology"
-    CHEMISTRY = "Chemistry"
-    PHYSICS = "Physics"
-    MATHEMATICS = "Mathematics"
-    PSYCHOLOGY = "Psychology"
-    EDUCATION = "Education"
-    SOCIAL_SCIENCES = "Social Sciences"
-    ARTS = "Arts"
-    MUSIC = "Music"
-    HISTORY = "History"
-    LITERATURE = "Literature"
-    LANGUAGE_STUDIES = "Language Studies"
-    ENVIRONMENTAL_SCIENCE = "Environmental Science"
-    OTHER = "Other"
+from enums import FieldOfStudyEnum, QualificationTypeEnum
 
 
 class Qualification(Base):

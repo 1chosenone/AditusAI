@@ -1,23 +1,14 @@
 """
-This module defines the Skill model and the SkillProficiency enum.
+This module defines the Skill model.
 
 Skill represents a skill a candidate has, along with their
 proficiency level.
 """
 
-import enum
 from sqlalchemy import Enum, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped
 from database.base import Base
-
-
-class SkillProficiency(enum.Enum):
-    """Enumeration of skill proficiency levels."""
-
-    BEGINNER = "beginner"
-    INTERMEDIATE = "Intermediate"
-    ADVANCED = "advanced"
-    EXPERT = "expert"
+from enums import SkillProficiency
 
 
 class Skill(Base):

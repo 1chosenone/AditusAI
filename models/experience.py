@@ -1,67 +1,13 @@
-"""This module defines the Experience model and related enums.
+"""This module defines the Experience model.
 
 Experience represents a candidate's work experience including
 company, job title, industry, and employment dates.
 """
 
-import enum
-
 from sqlalchemy import Enum, ForeignKey, Text
 from sqlalchemy.orm import mapped_column, Mapped
-
 from database.base import Base
-
-
-class IndustryEnum(enum.Enum):
-    """Enumeration of industry sectors."""
-
-    AGRICULTURE = "Agriculture"
-    MANUFACTURING = "Manufacturing"
-    CONSTRUCTION = "Construction"
-    ENERGY = "Energy"
-    TRANSPORTATION = "Transportation"
-    RETAIL = "Retail"
-    WHOLESALE = "Wholesale"
-    HOSPITALITY = "Hospitality"
-    FOOD_BEVERAGE = "Food & Beverage"
-    INFORMATION_TECHNOLOGY = "Information Technology"
-    SOFTWARE = "Software"
-    TELECOMMUNICATIONS = "Telecommunications"
-    FINANCIAL_SERVICES = "Financial Services"
-    BANKING = "Banking"
-    INSURANCE = "Insurance"
-    REAL_ESTATE = "Real Estate"
-    HEALTHCARE = "Healthcare"
-    PHARMACEUTICALS = "Pharmaceuticals"
-    BIOTECHNOLOGY = "Biotechnology"
-    EDUCATION = "Education"
-    GOVERNMENT = "Government"
-    NON_PROFIT = "Non-profit"
-    MEDIA = "Media"
-    ENTERTAINMENT = "Entertainment"
-    PROFESSIONAL_SERVICES = "Professional Services"
-    CONSULTING = "Consulting"
-    LEGAL = "Legal"
-    ENGINEERING = "Engineering"
-    LOGISTICS = "Logistics"
-    AUTOMOTIVE = "Automotive"
-    AEROSPACE = "Aerospace"
-    MINING = "Mining"
-    CHEMICAL = "Chemical"
-    AGRI_FOOD = "Agri-food"
-    OTHER = "Other"
-
-
-class JobTypeEnum(enum.Enum):
-    """Enumeration of job types."""
-
-    FULL_TIME = "Full-time"
-    PART_TIME = "Part-time"
-    CONTRACT = "Contract"
-    TEMPORARY = "Temporary"
-    INTERNSHIP = "Internship"
-    SEASONAL = "Seasonal"
-    FREELANCE = "Freelance"
+from enums import IndustryEnum, JobTypeEnum
 
 
 class Experience(Base):
