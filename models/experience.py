@@ -34,7 +34,7 @@ class Experience(Base):
     candidate_id: Mapped[int] = mapped_column(ForeignKey("candidate.candidate_id"))
     company_name: Mapped[str] = mapped_column()
     job_title: Mapped[str] = mapped_column()
-    job_type: Mapped[JobTypeEnum] = mapped_column(Enum(JobTypeEnum))
+    job_type: Mapped[JobTypeEnum | None] = mapped_column(Enum(JobTypeEnum))
     industry: Mapped[IndustryEnum | None] = mapped_column(Enum(IndustryEnum))
     description: Mapped[str | None] = mapped_column(Text)
     city: Mapped[str | None] = mapped_column()
