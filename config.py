@@ -27,7 +27,10 @@ class Settings(BaseSettings):
 
     # LLM config
     anthropic_api_key: SecretStr
-    model: str = "claude-haiku-4-5-20251001"
+    llm_model_name: str = "claude-haiku-4-5-20251001"
+    llm_temperature: float = 0.3
+    llm_max_tokens: int = 10_000
+    llm_max_tries: int = 3
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
