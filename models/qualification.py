@@ -47,7 +47,8 @@ class QualificationField(Base):
 
     __tablename__ = "qualification_field"
     qualification_id: Mapped[int] = mapped_column(
-        ForeignKey("qualification.qualification_id", primary_key=True)
+        ForeignKey("qualification.qualification_id"),
+        primary_key=True,
     )
     field_id: Mapped[FieldOfStudyEnum] = mapped_column(
         Enum(FieldOfStudyEnum), primary_key=True
