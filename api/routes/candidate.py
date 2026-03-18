@@ -3,17 +3,14 @@ from sqlalchemy.orm import Session
 from database.session import get_db
 from exceptions import CandidateInsertError, PDFExtractionError, ResumeParsingError
 from schemas.responses import CandidateResponse
-from services.candidate_service import (
-    extract_candidate_info,
-    get_candidate_by_hash,
-    upsert_candidate,
-)
+from services.candidate_service import get_candidate_by_hash, upsert_candidate
+from services.llm_service import extract_candidate_info
 from utils.pdf_utils import save_pdf, extract_pdf_text
 
 router = APIRouter(prefix="/candidate", tags=["candidate"])
 
 
-@router.post("/resume", response_model=CandidateResponse, tags=["Candidate"])
+@router.post("/resume", response_model=CandidateResponse, tags=["candidate"])
 async def create_candidate_from_resume(
     resume: UploadFile = File(..., description="PDF resume file to upload and parse"),
     db: Session = Depends(get_db),
