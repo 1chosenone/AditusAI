@@ -14,7 +14,7 @@ from instructor.exceptions import (
 )
 from litellm import acompletion
 from sqlalchemy.orm import Session
-from config import settings
+from core.config import settings
 from models.candidate import Candidate
 from models.experience import Experience
 from models.language import Language

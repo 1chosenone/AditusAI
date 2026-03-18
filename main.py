@@ -7,7 +7,7 @@ import logging
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from api.routes import candidate
-from config import setup_logging
+from core.config import setup_logging
 
 setup_logging()
 logger = logging.getLogger(__name__)

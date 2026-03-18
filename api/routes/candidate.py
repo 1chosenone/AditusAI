@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
-from config import setup_logging
 from database.session import get_db
 from exceptions import CandidateInsertError, PDFExtractionError, ResumeParsingError
 from schemas.responses import CandidateResponse
