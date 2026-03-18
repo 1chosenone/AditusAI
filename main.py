@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from config import setup_logging
 from database.session import get_db
 from exceptions import CandidateInsertError, PDFExtractionError, ResumeParsingError
-from schemas.responses import APIResponse, CandidateResponse
+from schemas.responses import CandidateResponse
 from services.candidate_service import (
     extract_candidate_info,
     get_candidate_by_hash,
@@ -11,15 +11,26 @@ from services.candidate_service import (
 )
 from utils.pdf_utils import save_pdf, extract_pdf_text
 
-MAX_SIZE_MB = 50
-
-
 setup_logging()
 app = FastAPI(title="Aditus AI Backend")
 
 
-@app.post("/candidates/resume", response_model=APIResponse)
-def upload_resume(resume: UploadFile = File(...)):
+@app.post("/candidate/resume", response_model=CandidateResponse, tags=["Candidates"])
+async def create_candidate_from_resume(
+    resume: UploadFile = File(..., description="PDF resume file to upload and parse"),
+    db: Session = Depends(get_db),
+):
+    """Upload and parse a candidate resume PDF.
+
+    Automatically extracts candidate information (name, skills, languages,
+    qualifications) using AI. If a candidate with the same resume content
+    already exists, returns the existing record (deduplication).
+
+    Args:
+        resume: PDF file containing the candidate's resume.
+    Returns:
+        CandidateResponse with extracted candidate information.
+    """
 
     if resume.content_type != "application/pdf":
         raise HTTPException(
@@ -32,12 +43,6 @@ def upload_resume(resume: UploadFile = File(...)):
         raise HTTPException(
             status_code=500, detail=f"Error uploading the resume '{resume.filename}'."
         )
-
-    return APIResponse(status="success", message="Resume uploaded successfully.")
-
-
-@app.put("/candidates/resume/analysis", response_model=CandidateResponse)
-async def analyze_resume(db: Session = Depends(get_db)):
 
     try:
         resume_content = extract_pdf_text("resume.pdf")
