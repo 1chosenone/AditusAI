@@ -6,7 +6,7 @@ certifications, and credentials along with their field of study.
 """
 
 from sqlalchemy import Enum, ForeignKey, Text
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 from database.base import Base
 from enums import FieldOfStudyEnum, QualificationTypeEnum
 
@@ -27,7 +27,9 @@ class Qualification(Base):
     __tablename__ = "qualification"
 
     qualification_id: Mapped[int] = mapped_column(primary_key=True)
-    candidate_id: Mapped[int] = mapped_column(ForeignKey("candidate.candidate_id"))
+    candidate_id: Mapped[int] = mapped_column(
+        ForeignKey("candidate.candidate_id", ondelete="CASCADE")
+    )
     institution: Mapped[str] = mapped_column()
     qualification_type: Mapped[QualificationTypeEnum] = mapped_column(
         Enum(QualificationTypeEnum)
@@ -35,6 +37,15 @@ class Qualification(Base):
     description: Mapped[str | None] = mapped_column(Text)
     start_year: Mapped[int | None] = mapped_column()
     end_year: Mapped[int] = mapped_column()
+
+    candidate: Mapped["Candidate"] = relationship(back_populates="qualifications")
+
+    fields: Mapped[list["QualificationField"]] = relationship(
+        "QualificationField",
+        back_populates="qualification",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
 
 class QualificationField(Base):
@@ -47,9 +58,11 @@ class QualificationField(Base):
 
     __tablename__ = "qualification_field"
     qualification_id: Mapped[int] = mapped_column(
-        ForeignKey("qualification.qualification_id"),
+        ForeignKey("qualification.qualification_id", ondelete="CASCADE"),
         primary_key=True,
     )
     field_id: Mapped[FieldOfStudyEnum] = mapped_column(
         Enum(FieldOfStudyEnum), primary_key=True
     )
+
+    qualification: Mapped["Qualification"] = relationship(back_populates="fields")

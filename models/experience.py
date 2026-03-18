@@ -5,7 +5,7 @@ company, job title, industry, and employment dates.
 """
 
 from sqlalchemy import Enum, ForeignKey, Text
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 from database.base import Base
 from enums import IndustryEnum, JobTypeEnum
 
@@ -31,7 +31,9 @@ class Experience(Base):
     __tablename__ = "experience"
 
     experience_id: Mapped[int] = mapped_column(primary_key=True)
-    candidate_id: Mapped[int] = mapped_column(ForeignKey("candidate.candidate_id"))
+    candidate_id: Mapped[int] = mapped_column(
+        ForeignKey("candidate.candidate_id", ondelete="CASCADE")
+    )
     company_name: Mapped[str] = mapped_column()
     job_title: Mapped[str] = mapped_column()
     job_type: Mapped[JobTypeEnum | None] = mapped_column(Enum(JobTypeEnum))
@@ -42,3 +44,5 @@ class Experience(Base):
     country: Mapped[str | None] = mapped_column()
     start_year: Mapped[int] = mapped_column()
     end_year: Mapped[int | None] = mapped_column()
+
+    candidate: Mapped["Candidate"] = relationship(back_populates="experiences")

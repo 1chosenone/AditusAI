@@ -5,7 +5,7 @@ and profile details.
 """
 
 from sqlalchemy import Text
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 from database.base import Base
 
 
@@ -38,3 +38,30 @@ class Candidate(Base):
     bio: Mapped[str | None] = mapped_column(Text)
     github_url: Mapped[str | None] = mapped_column()
     linkedin_url: Mapped[str | None] = mapped_column()
+    content_hash: Mapped[str | None] = mapped_column(unique=True)
+
+    # Relationships with cascade delete
+    experiences: Mapped[list["Experience"]] = relationship(
+        "Experience",
+        back_populates="candidate",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    languages: Mapped[list["Language"]] = relationship(
+        "Language",
+        back_populates="candidate",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    skills: Mapped[list["Skill"]] = relationship(
+        "Skill",
+        back_populates="candidate",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    qualifications: Mapped[list["Qualification"]] = relationship(
+        "Qualification",
+        back_populates="candidate",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )

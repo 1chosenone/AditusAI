@@ -6,7 +6,7 @@ their proficiency level.
 """
 
 from sqlalchemy import Enum, ForeignKey
-from sqlalchemy.orm import mapped_column, Mapped
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 from database.base import Base
 from enums import LanguageProficiency
 
@@ -24,8 +24,12 @@ class Language(Base):
     __tablename__ = "language"
 
     language_id: Mapped[int] = mapped_column(primary_key=True)
-    candidate_id: Mapped[int] = mapped_column(ForeignKey("candidate.candidate_id"))
+    candidate_id: Mapped[int] = mapped_column(
+        ForeignKey("candidate.candidate_id", ondelete="CASCADE")
+    )
     name: Mapped[str] = mapped_column(unique=True)
     proficiency: Mapped[LanguageProficiency | None] = mapped_column(
         Enum(LanguageProficiency)
     )
+
+    candidate: Mapped["Candidate"] = relationship(back_populates="languages")
