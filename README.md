@@ -48,7 +48,9 @@ Turn market trends into personalized, actionable learning recommendations, highl
 - `Qdrant` : vector database for advanced semantic search and matching based on embeddings.
 
 **AI / LLM**
-- LLM APIs (OpenAI / Anthropic — TBD) – used for resume parsing...
+- `litellm` : unified interface for 100+ LLM providers, letting developers choose and switch their preferred model via a consistent API.
+- `instructor` : structured output library built on top of LiteLLM that enforces Pydantic schema validation on LLM responses, with automatic retries on malformed outputs.
+- LLM APIs (OpenAI / Anthropic) : used for resume parsing
 
 
 ## Architecture
