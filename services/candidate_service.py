@@ -159,13 +159,29 @@ async def extract_candidate_info(resume: PDFContent) -> CandidateSchema:
     return candidate_data
 
 
-def insert_candidate(db: Session, candidate_data: CandidateSchema) -> Candidate:
+def get_candidate_by_hash(db: Session, content_hash: str) -> Candidate | None:
+    """Retrieve a candidate by their resume content hash.
+
+    Args:
+        db: Database session.
+        content_hash: Hash of the resume content.
+
+    Returns:
+        The Candidate object if found, None otherwise.
+    """
+    return db.query(Candidate).filter_by(content_hash=content_hash).first()
+
+
+def _insert_candidate(
+    db: Session, candidate_data: CandidateSchema, content_hash: str
+) -> Candidate:
     """Insert a candidate and their related data into the database.
 
     Args:
         db: Database session.
         candidate_data: CandidateSchema containing candidate information
             along with experiences, languages, skills, and qualifications.
+        content_hash: Hash of the resume content for deduplication.
 
     Returns:
         The inserted Candidate object with generated ID.
@@ -174,7 +190,8 @@ def insert_candidate(db: Session, candidate_data: CandidateSchema) -> Candidate:
     candidate = Candidate(
         **candidate_data.model_dump(
             exclude={"experiences", "languages", "qualifications", "skills"}
-        )
+        ),
+        content_hash=content_hash,
     )
     db.add(candidate)
     db.flush()
@@ -225,3 +242,28 @@ def insert_candidate(db: Session, candidate_data: CandidateSchema) -> Candidate:
     db.refresh(candidate)
 
     return candidate
+
+
+def upsert_candidate(
+    db: Session, candidate_data: CandidateSchema, content_hash: str
+) -> Candidate:
+    """Insert or update a candidate in the database.
+
+    If a candidate with the same email already exists, it will be replaced
+    with the new data.
+
+    Args:
+        db: Database session.
+        candidate_data: CandidateSchema containing candidate information.
+        content_hash: Hash of the resume content for deduplication.
+
+    Returns:
+        The inserted Candidate object with generated ID.
+    """
+    existing = db.query(Candidate).filter_by(email=candidate_data.email).first()
+
+    if existing:
+        db.delete(existing)
+        db.flush()  # delete before reinserting
+
+    return _insert_candidate(db, candidate_data, content_hash)

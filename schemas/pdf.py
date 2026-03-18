@@ -1,6 +1,7 @@
 """Pydantic schemas for PDF-related models."""
 
-from pydantic import BaseModel
+import hashlib
+from pydantic import BaseModel, computed_field
 
 
 class PDFContent(BaseModel):
@@ -13,3 +14,12 @@ class PDFContent(BaseModel):
 
     text: str
     hyperlinks: list[str]
+
+    @computed_field
+    def content_hash(self) -> str:
+        # Ensure deterministic ordering
+        sorted_links = sorted(self.hyperlinks)
+
+        combined = self.text + "|" + "|".join(sorted_links)
+
+        return hashlib.sha256(combined.encode()).hexdigest()
