@@ -206,3 +206,6 @@ cython_debug/
 
 # Agent documentation (internal use only)
 AGENTS.md
+
+# Uploaded files
+resume.pdf
