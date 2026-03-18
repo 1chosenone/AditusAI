@@ -16,6 +16,19 @@ from schemas.candidate import CandidateSchema
 logger = logging.getLogger(__name__)
 
 
+def get_candidate_by_id(db: Session, id: int) -> Candidate | None:
+    """Retrieve a candidate by their ID.
+
+    Args:
+        db: Database session.
+        id: The candidate's unique identifier.
+
+    Returns:
+        The Candidate object if found, None otherwise.
+    """
+    return db.get(Candidate, id)
+
+
 def get_candidate_by_hash(db: Session, content_hash: str) -> Candidate | None:
     """Retrieve a candidate by their resume content hash.
 
