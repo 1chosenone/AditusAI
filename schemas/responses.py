@@ -1,5 +1,6 @@
 """Pydantic schemas for API response models."""
 
+from typing import Any
 from pydantic import BaseModel
 
 
@@ -28,3 +29,14 @@ class CandidateResponse(BaseModel):
     linkedin_url: str | None
 
     model_config = {"from_attributes": True}
+
+
+class JobResponse(BaseModel):
+    job_id: str
+
+
+class JobStatusResponse(BaseModel):
+    id: str
+    status: str
+    result: Any
+    error: str | None

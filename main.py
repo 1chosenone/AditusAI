@@ -6,7 +6,7 @@ Provides endpoints for candidate resume parsing and management.
 import logging
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from api.routes import candidate
+from api.routes import candidate, jobs
 from core.config import setup_logging
 
 setup_logging()
@@ -27,6 +27,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Aditus AI Backend", lifespan=lifespan)
 
 app.include_router(candidate.router)
+app.include_router(jobs.router)
 
 
 @app.get("/")
