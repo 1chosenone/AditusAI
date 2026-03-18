@@ -94,10 +94,10 @@ class JobTypeEnum(enum.Enum):
 class LanguageProficiency(enum.Enum):
     """Enumeration of language proficiency levels."""
 
-    BEGINNER = "beginner"
+    BEGINNER = "Beginner"
     INTERMEDIATE = "Intermediate"
-    ADVANCED = "advanced"
-    PROFICIENT = "proficient"
+    ADVANCED = "Advanced"
+    PROFICIENT = "Proficient"
 
 
 class QualificationTypeEnum(enum.Enum):
@@ -118,7 +118,7 @@ class QualificationTypeEnum(enum.Enum):
 class SkillProficiency(enum.Enum):
     """Enumeration of skill proficiency levels."""
 
-    BEGINNER = "beginner"
+    BEGINNER = "Beginner"
     INTERMEDIATE = "Intermediate"
-    ADVANCED = "advanced"
-    EXPERT = "expert"
+    ADVANCED = "Advanced"
+    EXPERT = "Expert"
