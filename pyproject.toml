@@ -12,6 +12,7 @@ dependencies = [
     "pypdf>=6.9.0",
     "python-dotenv>=1.2.2",
     "python-multipart>=0.0.22",
+    "rq>=2.7.0",
     "sqlalchemy>=2.0.48",
 ]
 

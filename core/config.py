@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     # Database config
     database_url: str
 
+    # Redis config
+    redis_url: str
+
     # Logging config
     log_level: str = "INFO"
 
