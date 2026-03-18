@@ -6,6 +6,7 @@ This module provides functionality to query and persist candidate information
 
 import logging
 from sqlalchemy.orm import Session
+from exceptions import CandidateInsertError
 from models.candidate import Candidate
 from models.experience import Experience
 from models.language import Language
@@ -130,10 +131,15 @@ def upsert_candidate(
     Returns:
         The inserted Candidate object with generated ID.
     """
-    existing = db.query(Candidate).filter_by(email=candidate_data.email).first()
 
-    if existing:
-        db.delete(existing)
-        db.flush()  # delete before reinserting
+    try:
+        existing = db.query(Candidate).filter_by(email=candidate_data.email).first()
+
+        if existing:
+            db.delete(existing)
+            db.flush()  # delete before reinserting
+
+    except Exception as e:
+        raise CandidateInsertError("Unexpected error while inserting candidate") from e
 
     return _insert_candidate(db, candidate_data, content_hash)

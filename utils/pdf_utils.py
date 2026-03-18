@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 import shutil
 from pypdf import PdfReader, errors as pypdf_errors
+from exceptions import PDFExtractionError
 from schemas.pdf import PDFContent
 
 logger = logging.getLogger(__name__)
@@ -32,37 +33,42 @@ def extract_pdf_text(url: str) -> PDFContent:
     try:
         reader = PdfReader(url)
     except pypdf_errors.PdfReadError as e:
-        raise ValueError(f"Invalid or corrupted PDF file: {url}") from e
+        raise PDFExtractionError(f"Invalid or corrupted PDF file: {url}") from e
     except Exception as e:
-        raise RuntimeError(f"Unexpected error while reading PDF: {url}") from e
+        raise PDFExtractionError(f"Unexpected error while reading PDF: {url}") from e
 
-    text = ""
-    hyperlinks = []
-    for i, page in enumerate(reader.pages):
-        page_text = page.extract_text()
-        if not page_text:
-            logger.warning("Page %s has no extractable text", i + 1)
-            continue
+    try:
+        text = ""
+        hyperlinks = []
+        for i, page in enumerate(reader.pages):
+            page_text = page.extract_text()
+            if not page_text:
+                logger.warning("Page %s has no extractable text", i + 1)
+                continue
 
-        text += page_text
+            text += page_text
 
-        # Extract hyperlinks
-        if "/Annots" in page:
-            for annot in page["/Annots"]:
-                annot_obj = annot.get_object()
-                if annot_obj["/Subtype"] == "/Link":
-                    if "/URI" in annot_obj["/A"]:
-                        uri = annot_obj["/A"]["/URI"]
-                        logger.debug(
-                            "%s url extracted from page %s of the PDF",
-                            uri,
-                            i + 1,
-                        )
-                        hyperlinks.append(uri)
+            # Extract hyperlinks
+            if "/Annots" in page:
+                for annot in page["/Annots"]:
+                    annot_obj = annot.get_object()
+                    if annot_obj["/Subtype"] == "/Link":
+                        if "/URI" in annot_obj["/A"]:
+                            uri = annot_obj["/A"]["/URI"]
+                            logger.debug(
+                                "%s url extracted from page %s of the PDF",
+                                uri,
+                                i + 1,
+                            )
+                            hyperlinks.append(uri)
 
-    logger.info(
-        "Finished extracting text from PDF '%s' (%s pages)", url, len(reader.pages)
-    )
+        logger.info(
+            "Finished extracting text from PDF '%s' (%s pages)", url, len(reader.pages)
+        )
+    except Exception as e:
+        raise PDFExtractionError(
+            f"Unexpected error while extracting content PDF: {url}"
+        ) from e
     return PDFContent(text=text, hyperlinks=hyperlinks)
 
 

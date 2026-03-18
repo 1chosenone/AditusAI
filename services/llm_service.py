@@ -10,6 +10,7 @@ from instructor.exceptions import (
     ResponseParsingError,
 )
 from litellm import acompletion
+from exceptions import ResumeParsingError
 from schemas.candidate import CandidateSchema
 from schemas.pdf import PDFContent
 
@@ -114,19 +115,19 @@ async def extract_candidate_info(resume: PDFContent) -> CandidateSchema:
         logger.error("All %s retries exhausted:", e.n_attempts)
         for attempt in e.failed_attempts:
             logger.error("Error: %s", attempt.exception())
-        raise RuntimeError("Failed to extract candidate info after retries") from e
+        raise ResumeParsingError(
+            "Failed to extract candidate info after retries"
+        ) from e
     except IncompleteOutputException as e:
-        logger.error(
+        raise ResumeParsingError(
             "LLM has probably hits the max_tokens limit before completing its "
             "response. Output truncated. Partial data: %s",
             e.last_completion,
-        )
-        raise
+        ) from e
     except ResponseParsingError as e:
-        logger.error("Failed to parse response in %s mode", e.mode)
-        raise
+        raise ResumeParsingError("Failed to parse response in %s mode", e.mode) from e
     except Exception as e:
-        raise RuntimeError(
+        raise ResumeParsingError(
             "Unexpected error while extracting candidate info from the resume PDF"
         ) from e
     finally:
