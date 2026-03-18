@@ -4,7 +4,8 @@ Provides the SQLAlchemy engine, session factory, and FastAPI dependency
 for database access. Also handles initial table creation.
 """
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
 
 from config import settings
@@ -18,6 +19,16 @@ from models.qualification import QualificationField
 from models.skill import Skill
 
 engine = create_engine(settings.database_url, echo=(settings.log_level == "DEBUG"))
+
+
+# Enable FK enforcement for SQLite
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
+
 SESSION_LOCAL = sessionmaker(autoflush=False, bind=engine)
 Base.metadata.create_all(bind=engine)
 
