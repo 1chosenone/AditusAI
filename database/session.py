@@ -8,8 +8,7 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
 
-from config import settings
-
+from core.config import settings
 from database.base import Base
 from models.candidate import Candidate
 from models.experience import Experience

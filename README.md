@@ -41,6 +41,7 @@ Turn market trends into personalized, actionable learning recommendations, highl
 
 **Orchestration**
 - `n8n` : workflow automation for orchestrating data pipelines and repetitive tasks.
+- `Redis Queue (RQ)` : simple Python library for background task processing using Redis as a queue.
 
 **Databases**
 - `SQLite` : lightweight relational database for storage of structured data (CVs, jobs, skills).
@@ -56,8 +57,26 @@ Turn market trends into personalized, actionable learning recommendations, highl
 ## Architecture
 > 🚧 This section will be updated as the project progresses.
 
-## 🚦Running the project 
-> 🚧 Setup instructions will be added once the initial version is functional.
+## 🚦Running the project
+
+### Prerequisites
+- Redis must be running: `docker run -p 6379:6379 redis`
+- Copy `.env.example` to `.env` and configure required variables
+
+### 1. Install dependencies
+```bash
+uv sync
+```
+
+### 2. Start FastAPI server
+```bash
+uv run fastapi dev main.py
+```
+
+### 3. Start Redis worker (in a separate terminal)
+```bash
+uv run rq worker default
+```
 
 
 ## 📚 What I learned

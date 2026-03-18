@@ -1,63 +1,36 @@
-from fastapi import Depends, FastAPI, HTTPException, File, UploadFile
-from sqlalchemy.orm import Session
-from config import setup_logging
-from database.session import get_db
-from exceptions import CandidateInsertError, PDFExtractionError, ResumeParsingError
-from schemas.responses import APIResponse, CandidateResponse
-from services.candidate_service import (
-    extract_candidate_info,
-    get_candidate_by_hash,
-    upsert_candidate,
-)
-from utils.pdf_utils import save_pdf, extract_pdf_text
+"""Aditus AI Backend API.
 
-MAX_SIZE_MB = 50
+Provides endpoints for candidate resume parsing and management.
+"""
 
+import logging
+from fastapi import FastAPI
+from contextlib import asynccontextmanager
+from api.routes import candidate, jobs
+from core.config import setup_logging
 
 setup_logging()
-app = FastAPI(title="Aditus AI Backend")
+logger = logging.getLogger(__name__)
 
 
-@app.post("/candidates/resume", response_model=APIResponse)
-def upload_resume(resume: UploadFile = File(...)):
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage application lifecycle events.
 
-    if resume.content_type != "application/pdf":
-        raise HTTPException(
-            status_code=500, detail="The provided URL does not point to a PDF file."
-        )
-
-    try:
-        save_pdf(resume.file, "resume.pdf")
-    except:
-        raise HTTPException(
-            status_code=500, detail=f"Error uploading the resume '{resume.filename}'."
-        )
-
-    return APIResponse(status="success", message="Resume uploaded successfully.")
+    Handles startup and shutdown logging for the application.
+    """
+    logger.info("Starting app...")
+    yield
+    logger.info("Shutting down app...")
 
 
-@app.put("/candidates/resume/analysis", response_model=CandidateResponse)
-async def analyze_resume(db: Session = Depends(get_db)):
+app = FastAPI(title="Aditus AI Backend", lifespan=lifespan)
 
-    try:
-        resume_content = extract_pdf_text("resume.pdf")
-    except PDFExtractionError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+app.include_router(candidate.router)
+app.include_router(jobs.router)
 
-    # Return early if resume hasn't changed
-    existing = get_candidate_by_hash(db, resume_content.content_hash)
-    if existing:
-        return existing
 
-    try:
-        extracted_candidate_info = await extract_candidate_info(resume_content)
-    except ResumeParsingError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    try:
-        candidate = upsert_candidate(
-            db, extracted_candidate_info, resume_content.content_hash
-        )
-    except CandidateInsertError as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-    return candidate
+@app.get("/")
+async def root():
+    """Root endpoint returning a welcome message."""
+    return {"message": "Welcome to the Aditus AI Backend!"}
