@@ -6,9 +6,9 @@ from database.session import get_db
 from core.queue import enqueue
 from tasks.candidate import create_candidate_from_resume_task
 from schemas.responses import CandidateResponse, JobResponse
-from services.candidate_service import get_candidate_by_id
+from services.candidate_service import get_candidate_by_id, get_candidates
 
-router = APIRouter(prefix="/candidate", tags=["candidate"])
+router = APIRouter(prefix="/candidates", tags=["candidate"])
 
 
 @router.get("/{candidate_id}", response_model=CandidateResponse)
@@ -29,6 +29,20 @@ def get_candidate(candidate_id: int, db: Session = Depends(get_db)):
     if not candidate:
         raise HTTPException(status_code=404, detail="Candidate not found")
     return candidate
+
+
+@router.get("", response_model=list[CandidateResponse])
+def get_candidate(db: Session = Depends(get_db)):
+    """Retrieve all the candidates.
+
+    Args:
+        db: Database session.
+
+    Returns:
+        List of CandidateResponse with all the candidates information.
+    """
+    candidates = get_candidates(db)
+    return candidates
 
 
 @router.post("/resume")

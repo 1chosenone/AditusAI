@@ -5,6 +5,7 @@ This module provides functionality to query and persist candidate information
 """
 
 import logging
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from exceptions import CandidateInsertError
 from models.candidate import Candidate
@@ -28,6 +29,18 @@ def get_candidate_by_id(db: Session, id: int) -> Candidate | None:
         The Candidate object if found, None otherwise.
     """
     return db.get(Candidate, id)
+
+
+def get_candidates(db: Session) -> list[Candidate] | None:
+    """Retrieve candidates from the db.
+
+    Args:
+        db: Database session.
+
+    Returns:
+        A list containing the Candidate objects if found, None otherwise.
+    """
+    return db.scalars(select(Candidate)).all()
 
 
 def get_candidate_by_hash(db: Session, content_hash: str) -> Candidate | None:
