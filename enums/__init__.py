@@ -7,6 +7,7 @@ from enums.types import (
     LanguageProficiency,
     QualificationTypeEnum,
     SkillProficiency,
+    SeniorityLevel,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "LanguageProficiency",
     "QualificationTypeEnum",
     "SkillProficiency",
+    "SeniorityLevel",
 ]

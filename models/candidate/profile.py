@@ -1,6 +1,6 @@
-"""This module defines the Candidate model.
+"""This module defines the CandidateProfile model.
 
-Candidate represents a job seeker with their personal information
+CandidateProfile represents a job seeker with their personal information
 and profile details.
 """
 
@@ -9,7 +9,7 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship
 from database.base import Base
 
 
-class Candidate(Base):
+class CandidateProfile(Base):
     """Represents a job candidate or job seeker.
 
     Attributes:
@@ -26,7 +26,7 @@ class Candidate(Base):
         linkedin_url: URL to the candidate's LinkedIn profile.
     """
 
-    __tablename__ = "candidate"
+    __tablename__ = "candidate_profile"
     candidate_id: Mapped[int] = mapped_column(primary_key=True)
     first_name: Mapped[str] = mapped_column()
     last_name: Mapped[str] = mapped_column()
@@ -41,26 +41,33 @@ class Candidate(Base):
     content_hash: Mapped[str | None] = mapped_column(unique=True)
 
     # Relationships with cascade delete
-    experiences: Mapped[list["Experience"]] = relationship(
-        "Experience",
+    experiences: Mapped[list["CandidateExperience"]] = relationship(
+        "CandidateExperience",
         back_populates="candidate",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    languages: Mapped[list["Language"]] = relationship(
-        "Language",
+    languages: Mapped[list["CandidateLanguage"]] = relationship(
+        "CandidateLanguage",
         back_populates="candidate",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    skills: Mapped[list["Skill"]] = relationship(
-        "Skill",
+    seniority: Mapped[list["CandidateSeniority"]] = relationship(
+        "CandidateSeniority",
+        back_populates="candidate",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        uselist=False,
+    )
+    skills: Mapped[list["CandidateSkill"]] = relationship(
+        "CandidateSkill",
         back_populates="candidate",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    qualifications: Mapped[list["Qualification"]] = relationship(
-        "Qualification",
+    qualifications: Mapped[list["CandidateQualification"]] = relationship(
+        "CandidateQualification",
         back_populates="candidate",
         cascade="all, delete-orphan",
         passive_deletes=True,

@@ -11,7 +11,7 @@ from instructor.exceptions import (
 )
 from litellm import acompletion
 from exceptions import ResumeParsingError
-from schemas.candidate import CandidateSchema
+from schemas.candidate import CandidateProfileSchema
 from schemas.pdf import PDFContent
 
 logger = logging.getLogger(__name__)
@@ -73,11 +73,12 @@ def _get_system_prompt() -> str:
             2. If a range is within the same year (e.g., "Jan 2025 - April 2025"), both start_year and end_year MUST be that year (2025). 
             3. Do NOT default end_year to null if an end date is explicitly mentioned in the text. 
             4. Only use null for end_year if the text explicitly says "Present", "Current", or "To date".
+            5. If a month is explicitly mentioned for a date (start or end), whether as a number (e.g., "03"), full name (e.g., "March"), or abbreviation (e.g., "Mar"), extract it and convert it to its numeric form (1-12). Apply this independently: populate start_month and/or end_month only when the corresponding month is provided. If a month is missing for one side, set only that field to null.
     </EXTRACTION_RULES>
     """
 
 
-async def extract_candidate_info(resume: PDFContent) -> CandidateSchema:
+async def extract_candidate_info(resume: PDFContent) -> CandidateProfileSchema:
     """Extract candidate information from resume content using LLM.
 
     Args:
@@ -96,7 +97,7 @@ async def extract_candidate_info(resume: PDFContent) -> CandidateSchema:
     try:
         candidate_data, response = await client.chat.completions.create_with_completion(
             model=settings.llm_model_name,
-            response_model=CandidateSchema,
+            response_model=CandidateProfileSchema,
             messages=[
                 {
                     "role": "system",

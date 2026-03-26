@@ -10,7 +10,7 @@ from database.base import Base
 from enums import IndustryEnum, JobTypeEnum
 
 
-class Experience(Base):
+class CandidateExperience(Base):
     """Represents a candidate's work experience.
 
     Attributes:
@@ -25,14 +25,16 @@ class Experience(Base):
         region: Region (province, state, etc.) where the job was located.
         country: Country where the job was located.
         start_year: Year the position started.
+        start_month: Month the position started (None if not specified).
         end_year: Year the position ended (None if current).
+        end_month: Month the position ended (None if not specified).
     """
 
-    __tablename__ = "experience"
+    __tablename__ = "candidate_experience"
 
     experience_id: Mapped[int] = mapped_column(primary_key=True)
     candidate_id: Mapped[int] = mapped_column(
-        ForeignKey("candidate.candidate_id", ondelete="CASCADE")
+        ForeignKey("candidate_profile.candidate_id", ondelete="CASCADE")
     )
     company_name: Mapped[str] = mapped_column()
     job_title: Mapped[str] = mapped_column()
@@ -43,6 +45,8 @@ class Experience(Base):
     region: Mapped[str | None] = mapped_column()
     country: Mapped[str | None] = mapped_column()
     start_year: Mapped[int] = mapped_column()
+    start_month: Mapped[int | None] = mapped_column()
     end_year: Mapped[int | None] = mapped_column()
+    end_month: Mapped[int | None] = mapped_column()
 
-    candidate: Mapped["Candidate"] = relationship(back_populates="experiences")
+    candidate: Mapped["CandidateProfile"] = relationship(back_populates="experiences")

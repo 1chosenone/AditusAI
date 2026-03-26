@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from enums import LanguageProficiency
 
 
-class LanguageSchema(BaseModel):
+class CandidateLanguageSchema(BaseModel):
     """Represents a language that a candidate knows.
 
     Attributes:

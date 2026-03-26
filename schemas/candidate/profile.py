@@ -1,13 +1,13 @@
 """Pydantic schemas for candidate-related models."""
 
 from pydantic import BaseModel
-from .experience import ExperienceSchema
-from .language import LanguageSchema
-from .qualification import QualificationSchema
-from .skill import SkillSchema
+from .experience import CandidateExperienceSchema
+from .language import CandidateLanguageSchema
+from .qualification import CandidateQualificationSchema
+from .skill import CandidateSkillSchema
 
 
-class CandidateSchema(BaseModel):
+class CandidateProfileSchema(BaseModel):
     """Represents a job candidate or job seeker.
 
     Attributes:
@@ -36,7 +36,7 @@ class CandidateSchema(BaseModel):
     bio: str | None = None
     github_url: str | None = None
     linkedin_url: str | None = None
-    experiences: list[ExperienceSchema] = []
-    languages: list[LanguageSchema] = []
-    qualifications: list[QualificationSchema] = []
-    skills: list[SkillSchema] = []
+    experiences: list[CandidateExperienceSchema] = []
+    languages: list[CandidateLanguageSchema] = []
+    qualifications: list[CandidateQualificationSchema] = []
+    skills: list[CandidateSkillSchema] = []

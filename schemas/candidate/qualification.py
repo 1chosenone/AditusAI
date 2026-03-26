@@ -4,7 +4,11 @@ from pydantic import BaseModel
 from enums import FieldOfStudyEnum, QualificationTypeEnum
 
 
-class QualificationSchema(BaseModel):
+class CandidateQualificationFieldSchema(BaseModel):
+    field: FieldOfStudyEnum
+
+
+class CandidateQualificationSchema(BaseModel):
     """Represents a candidate's qualification or credential.
 
     Attributes:
@@ -13,7 +17,7 @@ class QualificationSchema(BaseModel):
         description: Description of the qualification.
         start_year: Year the qualification started.
         end_year: Year the qualification was completed.
-        fields_of_study: List of fields of study.
+        fields: List of fields of study.
     """
 
     institution: str
@@ -21,4 +25,4 @@ class QualificationSchema(BaseModel):
     description: str | None = None
     start_year: int | None = None
     end_year: int
-    fields_of_study: list[FieldOfStudyEnum] = []
+    fields: list[CandidateQualificationFieldSchema]

@@ -5,33 +5,45 @@ This module provides functionality to query and persist candidate information
 """
 
 import logging
+from typing import Optional
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
+from enums import SeniorityLevel
 from exceptions import CandidateInsertError
-from models.candidate import Candidate
-from models.experience import Experience
-from models.language import Language
-from models.qualification import Qualification, QualificationField
-from models.skill import Skill
-from schemas.candidate import CandidateSchema
+from models.candidate import *
+from schemas.candidate import CandidateProfileSchema
+from schemas.candidate import CandidateExperienceSchema
 
 logger = logging.getLogger(__name__)
 
 
-def get_candidate_by_id(db: Session, id: int) -> Candidate | None:
+def get_candidate_by_id(db: Session, candidate_id: int) -> Optional[CandidateProfile]:
     """Retrieve a candidate by their ID.
 
     Args:
         db: Database session.
-        id: The candidate's unique identifier.
+        candidate_id: The candidate's unique identifier.
 
     Returns:
         The Candidate object if found, None otherwise.
     """
-    return db.get(Candidate, id)
+
+    return db.scalars(
+        select(CandidateProfile)
+        .where(CandidateProfile.candidate_id == candidate_id)
+        .options(
+            selectinload(CandidateProfile.experiences),
+            selectinload(CandidateProfile.languages),
+            selectinload(CandidateProfile.qualifications).selectinload(
+                CandidateQualification.fields
+            ),
+            selectinload(CandidateProfile.seniority),
+            selectinload(CandidateProfile.skills),
+        )
+    ).first()
 
 
-def get_candidates(db: Session) -> list[Candidate] | None:
+def get_candidates(db: Session) -> list[CandidateProfile] | None:
     """Retrieve candidates from the db.
 
     Args:
@@ -40,10 +52,10 @@ def get_candidates(db: Session) -> list[Candidate] | None:
     Returns:
         A list containing the Candidate objects if found, None otherwise.
     """
-    return db.scalars(select(Candidate)).all()
+    return db.scalars(select(CandidateProfile)).all()
 
 
-def get_candidate_by_hash(db: Session, content_hash: str) -> Candidate | None:
+def get_candidate_by_hash(db: Session, content_hash: str) -> CandidateProfile | None:
     """Retrieve a candidate by their resume content hash.
 
     Args:
@@ -53,12 +65,44 @@ def get_candidate_by_hash(db: Session, content_hash: str) -> Candidate | None:
     Returns:
         The Candidate object if found, None otherwise.
     """
-    return db.query(Candidate).filter_by(content_hash=content_hash).first()
+    return db.query(CandidateProfile).filter_by(content_hash=content_hash).first()
+
+
+def _infer_seniority(
+    experiences: list[CandidateExperienceSchema],
+) -> tuple[SeniorityLevel, float]:
+    """Infer seniority level based on work experience.
+
+    Calculates total years of experience from all positions and determines
+    the appropriate seniority level.
+
+    Args:
+        experiences: List of work experience entries.
+
+    Returns:
+        A tuple containing:
+            - SeniorityLevel: JUNIOR (<3 years), MID (3-5 years), or SENIOR (>5 years)
+            - float: Total years of experience
+    """
+
+    total_months = sum(
+        (exp.end_year - exp.start_year) * 12 + (exp.end_month - exp.start_month)
+        for exp in experiences
+    )
+
+    years_experience = total_months / 12
+
+    if years_experience < 3:
+        return SeniorityLevel.JUNIOR, years_experience
+    if years_experience < 5:
+        return SeniorityLevel.MID, years_experience
+
+    return SeniorityLevel.SENIOR, years_experience
 
 
 def _insert_candidate(
-    db: Session, candidate_data: CandidateSchema, content_hash: str
-) -> Candidate:
+    db: Session, candidate_data: CandidateProfileSchema, content_hash: str
+) -> CandidateProfile:
     """Insert a candidate and their related data into the database.
 
     Args:
@@ -71,7 +115,7 @@ def _insert_candidate(
         The inserted Candidate object with generated ID.
     """
     # Insert the candidate
-    candidate = Candidate(
+    candidate = CandidateProfile(
         **candidate_data.model_dump(
             exclude={"experiences", "languages", "qualifications", "skills"}
         ),
@@ -83,7 +127,7 @@ def _insert_candidate(
     # Insert the experiences
     db.add_all(
         [
-            Experience(candidate_id=candidate.candidate_id, **exp.model_dump())
+            CandidateExperience(candidate_id=candidate.candidate_id, **exp.model_dump())
             for exp in candidate_data.experiences
         ]
     )
@@ -91,7 +135,7 @@ def _insert_candidate(
     # Insert the languages
     db.add_all(
         [
-            Language(candidate_id=candidate.candidate_id, **lang.model_dump())
+            CandidateLanguage(candidate_id=candidate.candidate_id, **lang.model_dump())
             for lang in candidate_data.languages
         ]
     )
@@ -99,26 +143,36 @@ def _insert_candidate(
     # Insert the skills
     db.add_all(
         [
-            Skill(candidate_id=candidate.candidate_id, **skill.model_dump())
+            CandidateSkill(candidate_id=candidate.candidate_id, **skill.model_dump())
             for skill in candidate_data.skills
         ]
     )
 
-    # Handle qualifications + their nested fields_of_study
-    for qual in candidate_data.qualifications:
-        qualification = Qualification(
+    # Insert seniority
+    seniority_level, years_of_experience = _infer_seniority(candidate_data.experiences)
+    db.add(
+        CandidateSeniority(
             candidate_id=candidate.candidate_id,
-            **qual.model_dump(exclude={"fields_of_study"}),
+            level=seniority_level,
+            years_of_experience=years_of_experience,
+        )
+    )
+
+    # Handle qualifications + their nested fields
+    for qual in candidate_data.qualifications:
+        qualification = CandidateQualification(
+            candidate_id=candidate.candidate_id,
+            **qual.model_dump(exclude={"fields"}),
         )
         db.add(qualification)
         db.flush()
 
         db.add_all(
             [
-                QualificationField(
-                    qualification_id=qualification.qualification_id, field_id=field
+                CandidateQualificationField(
+                    qualification_id=qualification.qualification_id, field=qf.field
                 )
-                for field in qual.fields_of_study
+                for qf in qual.fields
             ]
         )
 
@@ -129,8 +183,8 @@ def _insert_candidate(
 
 
 def upsert_candidate(
-    db: Session, candidate_data: CandidateSchema, content_hash: str
-) -> Candidate:
+    db: Session, candidate_data: CandidateProfileSchema, content_hash: str
+) -> CandidateProfile:
     """Insert or update a candidate in the database.
 
     If a candidate with the same email already exists, it will be replaced
@@ -146,7 +200,9 @@ def upsert_candidate(
     """
 
     try:
-        existing = db.query(Candidate).filter_by(email=candidate_data.email).first()
+        existing = (
+            db.query(CandidateProfile).filter_by(email=candidate_data.email).first()
+        )
 
         if existing:
             db.delete(existing)

@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from enums import SkillProficiency
 
 
-class SkillSchema(BaseModel):
+class CandidateSkillSchema(BaseModel):
     """Represents a skill that a candidate possesses.
 
     Attributes:

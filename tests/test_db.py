@@ -1,6 +1,6 @@
 import pytest
 from database.session import SESSION_LOCAL
-from models.candidate import Candidate
+from models.candidate import CandidateProfile
 
 
 @pytest.fixture
@@ -12,7 +12,7 @@ def db_session():
 
 
 def test_candidate_crud(db_session):
-    candidate = Candidate(
+    candidate = CandidateProfile(
         first_name="John",
         last_name="Doe",
         email="john.doe@example.com",
@@ -21,7 +21,7 @@ def test_candidate_crud(db_session):
     db_session.commit()
     db_session.refresh(candidate)
 
-    fetched = db_session.get(Candidate, candidate.candidate_id)
+    fetched = db_session.get(CandidateProfile, candidate.candidate_id)
     assert fetched is not None
     assert fetched.first_name == "John"
     assert fetched.last_name == "Doe"
@@ -30,4 +30,4 @@ def test_candidate_crud(db_session):
     db_session.delete(fetched)
     db_session.commit()
 
-    assert db_session.get(Candidate, candidate.candidate_id) is None
+    assert db_session.get(CandidateProfile, candidate.candidate_id) is None
