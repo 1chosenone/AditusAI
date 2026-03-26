@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from exceptions import CandidateInsertError
 from models.candidate_profile import CandidateProfile
 from models.experience import CandidateExperience
-from models.language import Language
+from models.language import CandidateLanguage
 from models.qualification import Qualification, QualificationField
 from models.skill import Skill
 from schemas.candidate import CandidateSchema
@@ -91,7 +91,7 @@ def _insert_candidate(
     # Insert the languages
     db.add_all(
         [
-            Language(candidate_id=candidate.candidate_id, **lang.model_dump())
+            CandidateLanguage(candidate_id=candidate.candidate_id, **lang.model_dump())
             for lang in candidate_data.languages
         ]
     )

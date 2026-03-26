@@ -47,8 +47,8 @@ class CandidateProfile(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    languages: Mapped[list["Language"]] = relationship(
-        "Language",
+    languages: Mapped[list["CandidateLanguage"]] = relationship(
+        "CandidateLanguage",
         back_populates="candidate",
         cascade="all, delete-orphan",
         passive_deletes=True,

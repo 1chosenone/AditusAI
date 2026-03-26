@@ -12,7 +12,7 @@ from core.config import settings
 from database.base import Base
 from models.candidate_profile import CandidateProfile
 from models.experience import CandidateExperience
-from models.language import Language
+from models.language import CandidateLanguage
 from models.qualification import Qualification
 from models.qualification import QualificationField
 from models.skill import Skill

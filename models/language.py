@@ -11,7 +11,7 @@ from database.base import Base
 from enums import LanguageProficiency
 
 
-class Language(Base):
+class CandidateLanguage(Base):
     """Represents a language that a candidate knows.
 
     Attributes:
@@ -21,7 +21,7 @@ class Language(Base):
         proficiency: Candidate's proficiency level in the language.
     """
 
-    __tablename__ = "language"
+    __tablename__ = "candidate_language"
 
     language_id: Mapped[int] = mapped_column(primary_key=True)
     candidate_id: Mapped[int] = mapped_column(
