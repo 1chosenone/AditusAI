@@ -5,11 +5,14 @@ This module provides functionality to query and persist candidate information
 """
 
 import logging
+import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from enums import SeniorityLevel
 from exceptions import CandidateInsertError
 from models.candidate import *
 from schemas.candidate import CandidateSchema
+from schemas.experience import ExperienceSchema
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +53,25 @@ def get_candidate_by_hash(db: Session, content_hash: str) -> CandidateProfile | 
         The Candidate object if found, None otherwise.
     """
     return db.query(CandidateProfile).filter_by(content_hash=content_hash).first()
+
+
+def _infer_seniority(
+    experiences: list[ExperienceSchema],
+) -> tuple[SeniorityLevel, float]:
+
+    total_months = sum(
+        (exp.end_year - exp.start_year) * 12 + (exp.end_month - exp.start_month)
+        for exp in experiences
+    )
+
+    years_experience = total_months / 12
+
+    if years_experience < 3:
+        return SeniorityLevel.JUNIOR, years_experience
+    elif years_experience < 5:
+        return SeniorityLevel.MID, years_experience
+    else:
+        return SeniorityLevel.SENIOR, years_experience
 
 
 def _insert_candidate(
@@ -98,6 +120,16 @@ def _insert_candidate(
             CandidateSkill(candidate_id=candidate.candidate_id, **skill.model_dump())
             for skill in candidate_data.skills
         ]
+    )
+
+    # Insert seniority
+    seniority_level, years_of_experience = _infer_seniority(candidate_data.experiences)
+    db.add(
+        CandidateSeniority(
+            candidate_id=candidate.candidate_id,
+            level=seniority_level,
+            years_of_experience=years_of_experience,
+        )
     )
 
     # Handle qualifications + their nested fields_of_study
