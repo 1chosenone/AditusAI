@@ -5,7 +5,6 @@ This module provides functionality to query and persist candidate information
 """
 
 import logging
-import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from enums import SeniorityLevel
@@ -17,7 +16,7 @@ from schemas.experience import ExperienceSchema
 logger = logging.getLogger(__name__)
 
 
-def get_candidate_by_id(db: Session, id: int) -> CandidateProfile | None:
+def get_candidate_by_id(db: Session, candidate_id: int) -> CandidateProfile | None:
     """Retrieve a candidate by their ID.
 
     Args:
@@ -27,7 +26,7 @@ def get_candidate_by_id(db: Session, id: int) -> CandidateProfile | None:
     Returns:
         The Candidate object if found, None otherwise.
     """
-    return db.get(CandidateProfile, id)
+    return db.get(CandidateProfile, candidate_id)
 
 
 def get_candidates(db: Session) -> list[CandidateProfile] | None:
@@ -58,6 +57,19 @@ def get_candidate_by_hash(db: Session, content_hash: str) -> CandidateProfile | 
 def _infer_seniority(
     experiences: list[ExperienceSchema],
 ) -> tuple[SeniorityLevel, float]:
+    """Infer seniority level based on work experience.
+
+    Calculates total years of experience from all positions and determines
+    the appropriate seniority level.
+
+    Args:
+        experiences: List of work experience entries.
+
+    Returns:
+        A tuple containing:
+            - SeniorityLevel: JUNIOR (<3 years), MID (3-5 years), or SENIOR (>5 years)
+            - float: Total years of experience
+    """
 
     total_months = sum(
         (exp.end_year - exp.start_year) * 12 + (exp.end_month - exp.start_month)
@@ -68,10 +80,10 @@ def _infer_seniority(
 
     if years_experience < 3:
         return SeniorityLevel.JUNIOR, years_experience
-    elif years_experience < 5:
+    if years_experience < 5:
         return SeniorityLevel.MID, years_experience
-    else:
-        return SeniorityLevel.SENIOR, years_experience
+
+    return SeniorityLevel.SENIOR, years_experience
 
 
 def _insert_candidate(
