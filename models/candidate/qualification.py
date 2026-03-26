@@ -63,7 +63,7 @@ class CandidateQualificationField(Base):
         ForeignKey("candidate_qualification.qualification_id", ondelete="CASCADE"),
         primary_key=True,
     )
-    field_id: Mapped[FieldOfStudyEnum] = mapped_column(
+    field: Mapped[FieldOfStudyEnum] = mapped_column(
         Enum(FieldOfStudyEnum), primary_key=True
     )
 
