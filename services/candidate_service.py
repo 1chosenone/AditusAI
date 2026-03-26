@@ -5,8 +5,9 @@ This module provides functionality to query and persist candidate information
 """
 
 import logging
+from typing import Optional
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from enums import SeniorityLevel
 from exceptions import CandidateInsertError
 from models.candidate import *
@@ -16,17 +17,30 @@ from schemas.candidate import CandidateExperienceSchema
 logger = logging.getLogger(__name__)
 
 
-def get_candidate_by_id(db: Session, candidate_id: int) -> CandidateProfile | None:
+def get_candidate_by_id(db: Session, candidate_id: int) -> Optional[CandidateProfile]:
     """Retrieve a candidate by their ID.
 
     Args:
         db: Database session.
-        id: The candidate's unique identifier.
+        candidate_id: The candidate's unique identifier.
 
     Returns:
         The Candidate object if found, None otherwise.
     """
-    return db.get(CandidateProfile, candidate_id)
+
+    return db.scalars(
+        select(CandidateProfile)
+        .where(CandidateProfile.candidate_id == candidate_id)
+        .options(
+            selectinload(CandidateProfile.experiences),
+            selectinload(CandidateProfile.languages),
+            selectinload(CandidateProfile.qualifications).selectinload(
+                CandidateQualification.fields
+            ),
+            selectinload(CandidateProfile.seniority),
+            selectinload(CandidateProfile.skills),
+        )
+    ).first()
 
 
 def get_candidates(db: Session) -> list[CandidateProfile] | None:
@@ -144,11 +158,11 @@ def _insert_candidate(
         )
     )
 
-    # Handle qualifications + their nested fields_of_study
+    # Handle qualifications + their nested fields
     for qual in candidate_data.qualifications:
         qualification = CandidateQualification(
             candidate_id=candidate.candidate_id,
-            **qual.model_dump(exclude={"fields_of_study"}),
+            **qual.model_dump(exclude={"fields"}),
         )
         db.add(qualification)
         db.flush()
@@ -156,9 +170,9 @@ def _insert_candidate(
         db.add_all(
             [
                 CandidateQualificationField(
-                    qualification_id=qualification.qualification_id, field_id=field
+                    qualification_id=qualification.qualification_id, field=qf.field
                 )
-                for field in qual.fields_of_study
+                for qf in qual.fields
             ]
         )
 

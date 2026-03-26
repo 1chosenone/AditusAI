@@ -2,6 +2,12 @@
 
 from typing import Any
 from pydantic import BaseModel
+from .candidate import (
+    CandidateExperienceSchema,
+    CandidateQualificationSchema,
+    CandidateLanguageSchema,
+    CandidateSenioritySchema,
+)
 
 
 class APIResponse(BaseModel):
@@ -42,6 +48,10 @@ class CandidateResponse(BaseModel):
     bio: str | None
     github_url: str | None
     linkedin_url: str | None
+    experiences: list[CandidateExperienceSchema] | None
+    qualifications: list[CandidateQualificationSchema] | None
+    languages: list[CandidateLanguageSchema] | None
+    seniority: CandidateSenioritySchema | None
 
     model_config = {"from_attributes": True}
 
