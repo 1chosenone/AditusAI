@@ -73,6 +73,7 @@ def _get_system_prompt() -> str:
             2. If a range is within the same year (e.g., "Jan 2025 - April 2025"), both start_year and end_year MUST be that year (2025). 
             3. Do NOT default end_year to null if an end date is explicitly mentioned in the text. 
             4. Only use null for end_year if the text explicitly says "Present", "Current", or "To date".
+            5. If a month is explicitly mentioned for a date (start or end), whether as a number (e.g., "03"), full name (e.g., "March"), or abbreviation (e.g., "Mar"), extract it and convert it to its numeric form (1-12). Apply this independently: populate start_month and/or end_month only when the corresponding month is provided. If a month is missing for one side, set only that field to null.
     </EXTRACTION_RULES>
     """
 
