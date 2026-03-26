@@ -60,7 +60,7 @@ class CandidateQualificationField(Base):
 
     __tablename__ = "candidate_qualification_field"
     qualification_id: Mapped[int] = mapped_column(
-        ForeignKey("qualification.qualification_id", ondelete="CASCADE"),
+        ForeignKey("candidate_qualification.qualification_id", ondelete="CASCADE"),
         primary_key=True,
     )
     field_id: Mapped[FieldOfStudyEnum] = mapped_column(
