@@ -128,5 +128,5 @@ class SeniorityLevel(enum.Enum):
     """Enumeration of seniority levels."""
 
     JUNIOR = "Junior"
-    INTERMEDIATE = "Intermediate"
+    MID = "Mid"
     SENIOR = "Senior"
