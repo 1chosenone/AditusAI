@@ -7,6 +7,7 @@ from models.candidate.qualification import (
     CandidateQualification,
     CandidateQualificationField,
 )
+from models.candidate.seniority import CandidateSeniority
 from models.candidate.skill import CandidateSkill
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "CandidateQualification",
     "CandidateQualificationField",
     "CandidateSkill",
+    "CandidateSeniority",
 ]
