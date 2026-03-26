@@ -32,7 +32,7 @@ class Experience(Base):
 
     experience_id: Mapped[int] = mapped_column(primary_key=True)
     candidate_id: Mapped[int] = mapped_column(
-        ForeignKey("candidate.candidate_id", ondelete="CASCADE")
+        ForeignKey("candidate_profile.candidate_id", ondelete="CASCADE")
     )
     company_name: Mapped[str] = mapped_column()
     job_title: Mapped[str] = mapped_column()
@@ -45,4 +45,4 @@ class Experience(Base):
     start_year: Mapped[int] = mapped_column()
     end_year: Mapped[int | None] = mapped_column()
 
-    candidate: Mapped["Candidate"] = relationship(back_populates="experiences")
+    candidate: Mapped["CandidateProfile"] = relationship(back_populates="experiences")

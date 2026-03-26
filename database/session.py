@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker
 
 from core.config import settings
 from database.base import Base
-from models.candidate import Candidate
+from models.candidate_profile import CandidateProfile
 from models.experience import Experience
 from models.language import Language
 from models.qualification import Qualification

@@ -25,11 +25,11 @@ class Language(Base):
 
     language_id: Mapped[int] = mapped_column(primary_key=True)
     candidate_id: Mapped[int] = mapped_column(
-        ForeignKey("candidate.candidate_id", ondelete="CASCADE")
+        ForeignKey("candidate_profile.candidate_id", ondelete="CASCADE")
     )
     name: Mapped[str] = mapped_column(unique=True)
     proficiency: Mapped[LanguageProficiency | None] = mapped_column(
         Enum(LanguageProficiency)
     )
 
-    candidate: Mapped["Candidate"] = relationship(back_populates="languages")
+    candidate: Mapped["CandidateProfile"] = relationship(back_populates="languages")

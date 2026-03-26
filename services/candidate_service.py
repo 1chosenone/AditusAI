@@ -8,7 +8,7 @@ import logging
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from exceptions import CandidateInsertError
-from models.candidate import Candidate
+from models.candidate_profile import CandidateProfile
 from models.experience import Experience
 from models.language import Language
 from models.qualification import Qualification, QualificationField
@@ -18,7 +18,7 @@ from schemas.candidate import CandidateSchema
 logger = logging.getLogger(__name__)
 
 
-def get_candidate_by_id(db: Session, id: int) -> Candidate | None:
+def get_candidate_by_id(db: Session, id: int) -> CandidateProfile | None:
     """Retrieve a candidate by their ID.
 
     Args:
@@ -28,10 +28,10 @@ def get_candidate_by_id(db: Session, id: int) -> Candidate | None:
     Returns:
         The Candidate object if found, None otherwise.
     """
-    return db.get(Candidate, id)
+    return db.get(CandidateProfile, id)
 
 
-def get_candidates(db: Session) -> list[Candidate] | None:
+def get_candidates(db: Session) -> list[CandidateProfile] | None:
     """Retrieve candidates from the db.
 
     Args:
@@ -40,10 +40,10 @@ def get_candidates(db: Session) -> list[Candidate] | None:
     Returns:
         A list containing the Candidate objects if found, None otherwise.
     """
-    return db.scalars(select(Candidate)).all()
+    return db.scalars(select(CandidateProfile)).all()
 
 
-def get_candidate_by_hash(db: Session, content_hash: str) -> Candidate | None:
+def get_candidate_by_hash(db: Session, content_hash: str) -> CandidateProfile | None:
     """Retrieve a candidate by their resume content hash.
 
     Args:
@@ -53,12 +53,12 @@ def get_candidate_by_hash(db: Session, content_hash: str) -> Candidate | None:
     Returns:
         The Candidate object if found, None otherwise.
     """
-    return db.query(Candidate).filter_by(content_hash=content_hash).first()
+    return db.query(CandidateProfile).filter_by(content_hash=content_hash).first()
 
 
 def _insert_candidate(
     db: Session, candidate_data: CandidateSchema, content_hash: str
-) -> Candidate:
+) -> CandidateProfile:
     """Insert a candidate and their related data into the database.
 
     Args:
@@ -71,7 +71,7 @@ def _insert_candidate(
         The inserted Candidate object with generated ID.
     """
     # Insert the candidate
-    candidate = Candidate(
+    candidate = CandidateProfile(
         **candidate_data.model_dump(
             exclude={"experiences", "languages", "qualifications", "skills"}
         ),
@@ -130,7 +130,7 @@ def _insert_candidate(
 
 def upsert_candidate(
     db: Session, candidate_data: CandidateSchema, content_hash: str
-) -> Candidate:
+) -> CandidateProfile:
     """Insert or update a candidate in the database.
 
     If a candidate with the same email already exists, it will be replaced
@@ -146,7 +146,9 @@ def upsert_candidate(
     """
 
     try:
-        existing = db.query(Candidate).filter_by(email=candidate_data.email).first()
+        existing = (
+            db.query(CandidateProfile).filter_by(email=candidate_data.email).first()
+        )
 
         if existing:
             db.delete(existing)

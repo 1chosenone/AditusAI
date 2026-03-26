@@ -1,6 +1,6 @@
-"""This module defines the Candidate model.
+"""This module defines the CandidateProfile model.
 
-Candidate represents a job seeker with their personal information
+CandidateProfile represents a job seeker with their personal information
 and profile details.
 """
 
@@ -9,7 +9,7 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship
 from database.base import Base
 
 
-class Candidate(Base):
+class CandidateProfile(Base):
     """Represents a job candidate or job seeker.
 
     Attributes:
@@ -26,7 +26,7 @@ class Candidate(Base):
         linkedin_url: URL to the candidate's LinkedIn profile.
     """
 
-    __tablename__ = "candidate"
+    __tablename__ = "candidate_profile"
     candidate_id: Mapped[int] = mapped_column(primary_key=True)
     first_name: Mapped[str] = mapped_column()
     last_name: Mapped[str] = mapped_column()

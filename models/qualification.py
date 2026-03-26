@@ -28,7 +28,7 @@ class Qualification(Base):
 
     qualification_id: Mapped[int] = mapped_column(primary_key=True)
     candidate_id: Mapped[int] = mapped_column(
-        ForeignKey("candidate.candidate_id", ondelete="CASCADE")
+        ForeignKey("candidate_profile.candidate_id", ondelete="CASCADE")
     )
     institution: Mapped[str] = mapped_column()
     qualification_type: Mapped[QualificationTypeEnum] = mapped_column(
@@ -38,7 +38,9 @@ class Qualification(Base):
     start_year: Mapped[int | None] = mapped_column()
     end_year: Mapped[int] = mapped_column()
 
-    candidate: Mapped["Candidate"] = relationship(back_populates="qualifications")
+    candidate: Mapped["CandidateProfile"] = relationship(
+        back_populates="qualifications"
+    )
 
     fields: Mapped[list["QualificationField"]] = relationship(
         "QualificationField",
