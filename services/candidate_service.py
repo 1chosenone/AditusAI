@@ -12,7 +12,7 @@ from models.candidate_profile import CandidateProfile
 from models.experience import CandidateExperience
 from models.language import CandidateLanguage
 from models.qualification import Qualification, QualificationField
-from models.skill import Skill
+from models.skill import CandidateSkill
 from schemas.candidate import CandidateSchema
 
 logger = logging.getLogger(__name__)
@@ -99,7 +99,7 @@ def _insert_candidate(
     # Insert the skills
     db.add_all(
         [
-            Skill(candidate_id=candidate.candidate_id, **skill.model_dump())
+            CandidateSkill(candidate_id=candidate.candidate_id, **skill.model_dump())
             for skill in candidate_data.skills
         ]
     )

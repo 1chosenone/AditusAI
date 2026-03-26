@@ -11,7 +11,7 @@ from database.base import Base
 from enums import SkillProficiency
 
 
-class Skill(Base):
+class CandidateSkill(Base):
     """Represents a skill that a candidate possesses.
 
     Attributes:
@@ -21,7 +21,7 @@ class Skill(Base):
         proficiency: Candidate's proficiency level in the skill.
     """
 
-    __tablename__ = "skill"
+    __tablename__ = "candidate_skill"
 
     skill_id: Mapped[int] = mapped_column(primary_key=True)
     candidate_id: Mapped[int] = mapped_column(
@@ -34,5 +34,5 @@ class Skill(Base):
 
     __table_args__ = (
         UniqueConstraint("candidate_id", "name", name="uq_skill_candidate_name"),
-        # ↑ same candidate can't have Python twice, but two candidates can both have Python
+        # same candidate can't have Python twice, but two candidates can both have Python
     )

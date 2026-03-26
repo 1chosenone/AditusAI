@@ -15,7 +15,7 @@ from models.experience import CandidateExperience
 from models.language import CandidateLanguage
 from models.qualification import Qualification
 from models.qualification import QualificationField
-from models.skill import Skill
+from models.skill import CandidateSkill
 
 engine = create_engine(settings.database_url, echo=(settings.log_level == "DEBUG"))
 
