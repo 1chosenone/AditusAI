@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from exceptions import CandidateInsertError
 from models.candidate_profile import CandidateProfile
-from models.experience import Experience
+from models.experience import CandidateExperience
 from models.language import Language
 from models.qualification import Qualification, QualificationField
 from models.skill import Skill
@@ -83,7 +83,7 @@ def _insert_candidate(
     # Insert the experiences
     db.add_all(
         [
-            Experience(candidate_id=candidate.candidate_id, **exp.model_dump())
+            CandidateExperience(candidate_id=candidate.candidate_id, **exp.model_dump())
             for exp in candidate_data.experiences
         ]
     )

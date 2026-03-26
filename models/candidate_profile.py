@@ -41,8 +41,8 @@ class CandidateProfile(Base):
     content_hash: Mapped[str | None] = mapped_column(unique=True)
 
     # Relationships with cascade delete
-    experiences: Mapped[list["Experience"]] = relationship(
-        "Experience",
+    experiences: Mapped[list["CandidateExperience"]] = relationship(
+        "CandidateExperience",
         back_populates="candidate",
         cascade="all, delete-orphan",
         passive_deletes=True,

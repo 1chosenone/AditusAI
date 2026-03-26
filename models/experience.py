@@ -10,7 +10,7 @@ from database.base import Base
 from enums import IndustryEnum, JobTypeEnum
 
 
-class Experience(Base):
+class CandidateExperience(Base):
     """Represents a candidate's work experience.
 
     Attributes:
@@ -28,7 +28,7 @@ class Experience(Base):
         end_year: Year the position ended (None if current).
     """
 
-    __tablename__ = "experience"
+    __tablename__ = "candidate_experience"
 
     experience_id: Mapped[int] = mapped_column(primary_key=True)
     candidate_id: Mapped[int] = mapped_column(
