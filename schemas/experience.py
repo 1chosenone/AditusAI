@@ -17,7 +17,9 @@ class ExperienceSchema(BaseModel):
         region: Region (province, state, etc.) where the job was located.
         country: Country where the job was located.
         start_year: Year the position started.
+        start_month: Month the position started (None if not specified).
         end_year: Year the position ended (None if current).
+        end_month: Month the position ended (None if not specified).
     """
 
     company_name: str
@@ -29,4 +31,6 @@ class ExperienceSchema(BaseModel):
     region: str | None = None
     country: str | None = None
     start_year: int
+    start_month: int | None
     end_year: int | None = None
+    end_month: int | None
