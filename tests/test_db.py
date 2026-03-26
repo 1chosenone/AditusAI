@@ -1,6 +1,6 @@
 import pytest
 from database.session import SESSION_LOCAL
-from models.candidate_profile import CandidateProfile
+from models.candidate import CandidateProfile
 
 
 @pytest.fixture

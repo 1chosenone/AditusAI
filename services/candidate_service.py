@@ -8,11 +8,7 @@ import logging
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from exceptions import CandidateInsertError
-from models.candidate_profile import CandidateProfile
-from models.experience import CandidateExperience
-from models.language import CandidateLanguage
-from models.qualification import CandidateQualification, CandidateQualificationField
-from models.skill import CandidateSkill
+from models.candidate import *
 from schemas.candidate import CandidateSchema
 
 logger = logging.getLogger(__name__)

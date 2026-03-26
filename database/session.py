@@ -10,12 +10,7 @@ from sqlalchemy.orm import sessionmaker
 
 from core.config import settings
 from database.base import Base
-from models.candidate_profile import CandidateProfile
-from models.experience import CandidateExperience
-from models.language import CandidateLanguage
-from models.qualification import CandidateQualification
-from models.qualification import CandidateQualificationField
-from models.skill import CandidateSkill
+from models.candidate import *
 
 engine = create_engine(settings.database_url, echo=(settings.log_level == "DEBUG"))
 
