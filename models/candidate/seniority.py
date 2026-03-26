@@ -1,10 +1,21 @@
-from sqlalchemy import Enum, ForeignKey, Text
+"""Candidate seniority model."""
+
+from sqlalchemy import Enum, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from database.base import Base
 from enums import SeniorityLevel
 
 
 class CandidateSeniority(Base):
+    """Represents a candidate's seniority level.
+
+    Attributes:
+        seniority_id: Primary key identifier.
+        candidate_id: Foreign key to the candidate profile.
+        level: Seniority level (e.g., Junior, Mid, Senior).
+        candidate: Related candidate profile.
+    """
+
     __tablename__ = "candidate_seniority"
 
     seniority_id: Mapped[int] = mapped_column(primary_key=True)
