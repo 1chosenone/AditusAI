@@ -12,7 +12,8 @@ class CandidateSeniority(Base):
     Attributes:
         seniority_id: Primary key identifier.
         candidate_id: Foreign key to the candidate profile.
-        level: Seniority level (e.g., Junior, Mid, Senior).
+        level: Seniority level (e.g., Junior, Intermediate, Senior).
+        years_of_experience: Candidate total years of experience
         candidate: Related candidate profile.
     """
 
@@ -23,6 +24,7 @@ class CandidateSeniority(Base):
         ForeignKey("candidate_profile.candidate_id", ondelete="CASCADE")
     )
     level: Mapped[SeniorityLevel] = mapped_column(Enum(SeniorityLevel))
+    years_of_experience: Mapped[int] = mapped_column()
 
     candidate: Mapped["CandidateProfile"] = relationship(
         back_populates="seniority", uselist=False
