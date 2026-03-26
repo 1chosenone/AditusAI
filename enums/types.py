@@ -122,3 +122,11 @@ class SkillProficiency(enum.Enum):
     INTERMEDIATE = "Intermediate"
     ADVANCED = "Advanced"
     EXPERT = "Expert"
+
+
+class SeniorityLevel(enum.Enum):
+    """Enumeration of seniority levels."""
+
+    JUNIOR = "Junior"
+    INTERMEDIATE = "Intermediate"
+    SENIOR = "Senior"

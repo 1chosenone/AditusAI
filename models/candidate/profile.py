@@ -53,6 +53,13 @@ class CandidateProfile(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+    seniority: Mapped[list["CandidateSeniority"]] = relationship(
+        "CandidateSeniority",
+        back_populates="candidate",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        uselist=False,
+    )
     skills: Mapped[list["CandidateSkill"]] = relationship(
         "CandidateSkill",
         back_populates="candidate",
