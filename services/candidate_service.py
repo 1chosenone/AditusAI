@@ -11,7 +11,7 @@ from exceptions import CandidateInsertError
 from models.candidate_profile import CandidateProfile
 from models.experience import CandidateExperience
 from models.language import CandidateLanguage
-from models.qualification import Qualification, QualificationField
+from models.qualification import CandidateQualification, CandidateQualificationField
 from models.skill import CandidateSkill
 from schemas.candidate import CandidateSchema
 
@@ -106,7 +106,7 @@ def _insert_candidate(
 
     # Handle qualifications + their nested fields_of_study
     for qual in candidate_data.qualifications:
-        qualification = Qualification(
+        qualification = CandidateQualification(
             candidate_id=candidate.candidate_id,
             **qual.model_dump(exclude={"fields_of_study"}),
         )
@@ -115,7 +115,7 @@ def _insert_candidate(
 
         db.add_all(
             [
-                QualificationField(
+                CandidateQualificationField(
                     qualification_id=qualification.qualification_id, field_id=field
                 )
                 for field in qual.fields_of_study
