@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from enums import JobTypeEnum, IndustryEnum
 
 
-class ExperienceSchema(BaseModel):
+class CandidateExperienceSchema(BaseModel):
     """Represents a candidate's work experience.
 
     Attributes:

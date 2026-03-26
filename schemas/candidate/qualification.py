@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from enums import FieldOfStudyEnum, QualificationTypeEnum
 
 
-class QualificationSchema(BaseModel):
+class CandidateQualificationSchema(BaseModel):
     """Represents a candidate's qualification or credential.
 
     Attributes:

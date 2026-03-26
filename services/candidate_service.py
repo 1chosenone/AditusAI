@@ -10,8 +10,8 @@ from sqlalchemy.orm import Session
 from enums import SeniorityLevel
 from exceptions import CandidateInsertError
 from models.candidate import *
-from schemas.candidate import CandidateSchema
-from schemas.experience import ExperienceSchema
+from schemas.candidate import CandidateProfileSchema
+from schemas.candidate import CandidateExperienceSchema
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ def get_candidate_by_hash(db: Session, content_hash: str) -> CandidateProfile | 
 
 
 def _infer_seniority(
-    experiences: list[ExperienceSchema],
+    experiences: list[CandidateExperienceSchema],
 ) -> tuple[SeniorityLevel, float]:
     """Infer seniority level based on work experience.
 
@@ -87,7 +87,7 @@ def _infer_seniority(
 
 
 def _insert_candidate(
-    db: Session, candidate_data: CandidateSchema, content_hash: str
+    db: Session, candidate_data: CandidateProfileSchema, content_hash: str
 ) -> CandidateProfile:
     """Insert a candidate and their related data into the database.
 
@@ -169,7 +169,7 @@ def _insert_candidate(
 
 
 def upsert_candidate(
-    db: Session, candidate_data: CandidateSchema, content_hash: str
+    db: Session, candidate_data: CandidateProfileSchema, content_hash: str
 ) -> CandidateProfile:
     """Insert or update a candidate in the database.
 

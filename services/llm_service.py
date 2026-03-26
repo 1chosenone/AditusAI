@@ -11,7 +11,7 @@ from instructor.exceptions import (
 )
 from litellm import acompletion
 from exceptions import ResumeParsingError
-from schemas.candidate import CandidateSchema
+from schemas.candidate import CandidateProfileSchema
 from schemas.pdf import PDFContent
 
 logger = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ def _get_system_prompt() -> str:
     """
 
 
-async def extract_candidate_info(resume: PDFContent) -> CandidateSchema:
+async def extract_candidate_info(resume: PDFContent) -> CandidateProfileSchema:
     """Extract candidate information from resume content using LLM.
 
     Args:
@@ -97,7 +97,7 @@ async def extract_candidate_info(resume: PDFContent) -> CandidateSchema:
     try:
         candidate_data, response = await client.chat.completions.create_with_completion(
             model=settings.llm_model_name,
-            response_model=CandidateSchema,
+            response_model=CandidateProfileSchema,
             messages=[
                 {
                     "role": "system",
