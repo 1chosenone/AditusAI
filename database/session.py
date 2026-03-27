@@ -11,6 +11,7 @@ from sqlalchemy.orm import sessionmaker
 from core.config import settings
 from database.base import Base
 from models.candidate import *
+from models.job import JobPostings
 
 engine = create_engine(settings.database_url, echo=(settings.log_level == "DEBUG"))
 
