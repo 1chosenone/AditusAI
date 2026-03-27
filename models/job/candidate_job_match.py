@@ -35,8 +35,8 @@ class CandidateJobMatch(Base):
     score: Mapped[float] = mapped_column()
     explication: Mapped[str | None] = mapped_column(Text)
 
-    matched_skills: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
-    missing_skills: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    matched_skills: Mapped[list[str] | None] = mapped_column(JSON)
+    missing_skills: Mapped[list[str] | None] = mapped_column(JSON)
 
     __table_args__ = (
         UniqueConstraint("candidate_id", "job_id", name="unique_score_candidate_job"),
