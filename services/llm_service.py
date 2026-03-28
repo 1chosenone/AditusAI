@@ -138,6 +138,49 @@ def _get_query_optimization_system_prompt(n: int) -> str:
     """
 
 
+def _get_query_inference_system_prompt(n: int) -> str:
+    """Generate the system prompt for query inference from skills.
+
+    Args:
+        n: Number of inferred search terms to generate.
+
+    Returns:
+        System prompt string containing instructions for the LLM on how to
+        infer job search terms from candidate skills.
+    """
+
+    return f"""You are a Job Search Query Inference Engine.
+
+    <TASK>
+        Given a candidate's skill set with proficiency levels, infer exactly {n} job search terms that best represent the roles this candidate is qualified for.
+    </TASK>
+
+    <INFERENCE_RULES>
+        - Prioritize skills with "Advanced" or "Expert" proficiency — these define the candidate's core identity.
+        - Treat "Intermediate" skills as supporting context — use them to refine or broaden terms, not to lead them.
+        - Infer ROLES, not technologies (e.g., "Machine Learning Engineer" not "PyTorch").
+        - A term can reference a technology only if it is commonly used as a job title (e.g., "Python Developer", "React Developer").
+        - Look for skill CLUSTERS to infer specialized roles:
+            <EXAMPLES>
+                - PyTorch + Scikit-learn + Pandas + NumPy → "Machine Learning Engineer"
+                - FastAPI + Docker + PostgreSQL + Python → "Backend Developer"
+                - MLflow + Prefect + Docker → "MLOps Engineer"
+                - Qdrant + PyTorch + Python → "AI/RAG Engineer"
+                - React + TypeScript + JavaScript → "Frontend Developer"
+                - Docker + GitLab CI/CD + Prometheus + Grafana → "DevOps Engineer"
+            </EXAMPLES>
+        - Avoid redundancy — each term must represent a meaningfully distinct role.
+        - Output exactly {n} terms — no more, no less.
+    </INFERENCE_RULES>
+    
+    <OUTPUT_FORMAT>
+        - Return JSON in this exact format: {{"terms": ["term1", "term2", ...]}}
+        - Do NOT wrap it in a class name or any other key (e.g., do NOT return {{"ParsedQuery": {{...}}}} or {{"InferredTerms": {{...}}}})
+        - Do NOT include explanations, preamble, or commentary — only the JSON object.
+    </OUTPUT_FORMAT>
+    """
+
+
 @lru_cache(maxsize=4)
 def _get_client(model_name: str) -> instructor.AsyncInstructor:
     """Create and cache an instructor client for the specified model.
@@ -387,3 +430,85 @@ async def parse_query_terms(q: str) -> ParsedQuery:
             )
 
     return parsed_query
+
+
+async def infer_query_from_skills(
+    candidate: CandidateProfileSchema, terms_to_generate: int = 5
+) -> ParsedQuery:
+    """Infer job search terms from candidate's skills using LLM.
+
+    Args:
+        candidate: CandidateProfileSchema containing the candidate's skills.
+        terms_to_generate: Number of inferred terms to generate (default: 5).
+
+    Returns:
+        ParsedQuery containing the list of inferred search terms.
+
+    Raises:
+        QueryTermsParsingError: If all retries are exhausted or an unexpected error occurs.
+    """
+    logger.debug("Infering query search terms based on the candidate skills with AI...")
+
+    try:
+        cfg = settings.query_inference_llm
+        client = _get_client(cfg.model)
+
+        skills = [
+            {"name": s.name, "proficiency": s.proficiency} for s in candidate.skills
+        ]
+
+        (
+            inferenced_query,
+            response,
+        ) = await client.chat.completions.create_with_completion(
+            model=cfg.model,
+            response_model=ParsedQuery,
+            messages=[
+                {
+                    "role": "system",
+                    "content": _get_query_inference_system_prompt(terms_to_generate),
+                },
+                {
+                    "role": "user",
+                    "content": f"{skills}",
+                },
+            ],
+            temperature=cfg.temperature,
+            max_tokens=cfg.max_tokens,
+            max_retries=cfg.max_tries,
+            api_base=cfg.api_base,
+        )
+    except InstructorRetryException as e:
+        logger.error("All %s retries exhausted:", e.n_attempts)
+        for attempt in e.failed_attempts:
+            logger.error("Error: %s", attempt.exception())
+        raise QueryTermsParsingError(
+            "Failed to infer query terms from skills after retries"
+        ) from e
+    except IncompleteOutputException as e:
+        raise QueryTermsParsingError(
+            "LLM has probably hits the max_tokens limit before completing its "
+            "response. Output truncated. Partial data: %s",
+            e.last_completion,
+        ) from e
+    except Exception as e:
+        raise QueryTermsParsingError(
+            "Unexpected error while inferring query terms from skills"
+        ) from e
+    finally:
+        logger.info("Finished inferring query terms from skills")
+
+        if response:
+            finish_reason = response.choices[0].finish_reason
+            usage = response.usage
+
+            logger.debug(
+                "LLM call finished - model: %s | stop: %s | tokens: %s in / %s out / %s total",
+                response.model,
+                finish_reason,
+                usage.prompt_tokens,
+                usage.completion_tokens,
+                usage.total_tokens,
+            )
+
+    return inferenced_query
