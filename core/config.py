@@ -5,8 +5,16 @@ loading configuration from environment variables and .env files.
 """
 
 import logging
-from pydantic import SecretStr
+from pydantic import BaseModel, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class LLMTaskConfig(BaseModel):
+    model: str
+    temperature: float = 0.3
+    max_tokens: int = 10_000
+    max_tries: int = 3
+    api_base: str | None = None  # only needed for Ollama
 
 
 class Settings(BaseSettings):
@@ -26,16 +34,31 @@ class Settings(BaseSettings):
     redis_url: str
 
     # Logging config
-    log_level: str = "INFO"
+    log_level: str = "DEBUG"
 
     # LLM config
-    anthropic_api_key: SecretStr
-    llm_model_name: str = "claude-haiku-4-5-20251001"
-    llm_temperature: float = 0.3
-    llm_max_tokens: int = 10_000
-    llm_max_tries: int = 3
+    anthropic_api_key: SecretStr | None = None
+    openai_api_key: SecretStr | None = None
+    ollama_api_base: str | None = None
+
+    # Models
+    llm_resume_parsing_model: str = "anthropic/claude-haiku-4-5-20251001"
+    llm_query_optimization_model: str = "ollama/llama3.2:3b"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
+    @property
+    def parsing_llm(self) -> LLMTaskConfig:
+        return LLMTaskConfig(model=self.llm_resume_parsing_model)
+
+    @property
+    def query_optimization_llm(self) -> LLMTaskConfig:
+        return LLMTaskConfig(
+            model=self.llm_query_optimization_model,
+            temperature=0.4,
+            max_tokens=250,
+            api_base=self.ollama_api_base,
+        )
 
 
 # Create a single instance to be used across the app

@@ -5,6 +5,10 @@ class ResumeParsingError(Exception):
     """Raised when the LLM fails to extract candidate info from a resume."""
 
 
+class QueryOptimizationError(Exception):
+    """Raised when the LLM fails to optimize a query provided by the user"""
+
+
 class PDFExtractionError(Exception):
     """Raised when text extraction from a PDF fails."""
 

@@ -1,8 +1,8 @@
 """LLM service for candidate information extraction."""
 
 from datetime import datetime
+from functools import lru_cache
 import logging
-from core.config import settings
 import instructor
 from instructor.exceptions import (
     IncompleteOutputException,
@@ -10,16 +10,16 @@ from instructor.exceptions import (
     ResponseParsingError,
 )
 from litellm import acompletion
-from exceptions import ResumeParsingError
+from core.config import settings
+from exceptions import ResumeParsingError, QueryOptimizationError
 from schemas.candidate import CandidateProfileSchema
+from schemas.query import OptimizedQuery
 from schemas.pdf import PDFContent
 
 logger = logging.getLogger(__name__)
 
-client = instructor.from_litellm(acompletion)
 
-
-def _get_system_prompt() -> str:
+def _get_resume_parsing_system_prompt() -> str:
     """Generate the system prompt for resume parsing.
 
     Returns:
@@ -28,7 +28,7 @@ def _get_system_prompt() -> str:
     """
     now = datetime.now()
 
-    return f"""You are a high-precision Resume Parsing Engine. 
+    return f"""You are a high-precision Resume Parsing Engine.
 
     <CURRENT_DATE>
     - Today is {now.year}-{now.month}-{now.day}
@@ -78,6 +78,82 @@ def _get_system_prompt() -> str:
     """
 
 
+def _get_query_optimization_system_prompt(n: int) -> str:
+    """Generate the system prompt for query optimization.
+
+    Args:
+        n: Number of optimized search terms to generate.
+
+    Returns:
+        System prompt string containing instructions for the LLM on how to
+        optimize job search queries.
+    """
+
+    return f"""You are a Job Search Query Optimization Engine.
+
+    Your role is to receive raw job search terms from a candidate and return exactly {n} optimized search terms.
+
+    <TASK>
+        - INPUT: A raw string of job search terms provided by the candidate (e.g., "ai fullstack").
+        - OUTPUT: A list of exactly {n} optimized search terms.
+    </TASK>
+
+    <OPTIMIZATION_MODES>
+        Count the number of terms in the INPUT. Compare that count with N ({n}).
+
+        <REFINEMENT_MODE condition="N <= number of input terms">
+            - ONLY refine and expand the terms explicitly provided.
+            - Do NOT infer or add unrelated terms.
+            - Focus on making each term more professional and searchable.
+            <EXAMPLE>
+                INPUT: "ai fullstack" (2 terms), N=2
+                OUTPUT: ["Artificial Intelligence (AI)", "Full-Stack Developer"]
+            </EXAMPLE>
+        </REFINEMENT_MODE>
+
+        <EXPANSION_MODE condition="N > number of input terms">
+            - Start by refining the provided terms (as in REFINEMENT_MODE).
+            - Fill the remaining slots with semantically related terms a recruiter would use.
+            - Expand across related technologies, roles, and specializations.
+            - Prioritize terms commonly found in job postings.
+            <EXAMPLE>
+                INPUT: "ai fullstack" (2 terms), N=6
+                OUTPUT: ["Artificial Intelligence (AI)", "Full-Stack Developer", "Machine Learning Engineer", "LLM Engineer", "Backend Developer", "Frontend Developer"]
+                REASONING: 2 input terms refined first, then 4 related terms inferred to reach N=6.
+            </EXAMPLE>
+        </EXPANSION_MODE>
+    </OPTIMIZATION_MODES>
+
+    <RULES>
+        - OUTPUT exactly {n} terms — no more, no less.
+        - Use professional, recruiter-friendly terminology.
+        - Avoid redundancy — each term must be meaningfully distinct.
+        - Preserve the candidate's intent — never replace their terms with unrelated ones.
+        - Do NOT include explanations, preamble, or commentary — only the list.
+    </RULES>
+    """
+
+
+@lru_cache(maxsize=4)
+def _get_client(model_name: str) -> instructor.AsyncInstructor:
+    """Create and cache an instructor client for the specified model.
+
+    Args:
+        model_name: The name of the LLM model to use.
+
+    Returns:
+        An AsyncInstructor client configured for the given model.
+    """
+    mode = (
+        instructor.Mode.JSON
+        if model_name.startswith("ollama/")
+        else instructor.Mode.TOOLS
+    )
+    client = instructor.from_litellm(acompletion, mode=mode)
+    logger.debug("Instructor/LiteLLM client created")
+    return client
+
+
 async def extract_candidate_info(resume: PDFContent) -> CandidateProfileSchema:
     """Extract candidate information from resume content using LLM.
 
@@ -95,22 +171,28 @@ async def extract_candidate_info(resume: PDFContent) -> CandidateProfileSchema:
     logger.debug("Extracting candidate informations from the resume...")
 
     try:
+        # Retrieve appropriate llm config
+        cfg = settings.parsing_llm
+
+        # Get the appropriate instructor client (based on the model)
+        client = _get_client(cfg.model)
+
         candidate_data, response = await client.chat.completions.create_with_completion(
-            model=settings.llm_model_name,
+            model=cfg.model,
             response_model=CandidateProfileSchema,
             messages=[
                 {
                     "role": "system",
-                    "content": _get_system_prompt(),
+                    "content": _get_resume_parsing_system_prompt(),
                 },
                 {
                     "role": "user",
                     "content": f"Resume:\n{resume.text}\n\nLinks:\n{resume.hyperlinks}",
                 },
             ],
-            max_retries=settings.llm_max_tries,
-            max_tokens=settings.llm_max_tokens,
-            temperature=settings.llm_temperature,
+            max_retries=cfg.max_tries,
+            max_tokens=cfg.max_tokens,
+            temperature=cfg.temperature,
         )
     except InstructorRetryException as e:
         logger.error("All %s retries exhausted:", e.n_attempts)
@@ -148,3 +230,82 @@ async def extract_candidate_info(resume: PDFContent) -> CandidateProfileSchema:
             )
 
     return candidate_data
+
+
+async def optimize_query(q: str, terms_to_generate: int = 5):
+    """Optimize a job search query using LLM to generate refined search terms.
+
+    Args:
+        q: Raw job search terms input by the candidate.
+        terms_to_generate: Number of optimized terms to generate (default: 5).
+
+    Returns:
+        OptimizedQuery containing the list of refined search terms.
+
+    Raises:
+        QueryOptimizationError: If all retries are exhausted or an unexpected error occurs.
+    """
+    logger.debug("Optimizing jobs search query with AI...")
+
+    try:
+        # Retrieve appropriate llm config
+        cfg = settings.query_optimization_llm
+
+        # Get the appropriate instructor client (based on the model)
+        client = _get_client(cfg.model)
+
+        (
+            optimized_query,
+            response,
+        ) = await client.chat.completions.create_with_completion(
+            model=cfg.model,
+            response_model=OptimizedQuery,
+            messages=[
+                {
+                    "role": "system",
+                    "content": _get_query_optimization_system_prompt(terms_to_generate),
+                },
+                {
+                    "role": "user",
+                    "content": q,
+                },
+            ],
+            temperature=cfg.temperature,
+            max_tokens=cfg.max_tokens,
+            max_retries=cfg.max_tries,
+            api_base=cfg.api_base,  # None is ignored by litellm for cloud providers
+        )
+    except InstructorRetryException as e:
+        logger.error("All %s retries exhausted:", e.n_attempts)
+        for attempt in e.failed_attempts:
+            logger.error("Error: %s", attempt.exception())
+        raise QueryOptimizationError(
+            "Failed to optimize the query after retries"
+        ) from e
+    except IncompleteOutputException as e:
+        raise QueryOptimizationError(
+            "LLM has probably hits the max_tokens limit before completing its "
+            "response. Output truncated. Partial data: %s",
+            e.last_completion,
+        ) from e
+    except Exception as e:
+        raise QueryOptimizationError(
+            "Unexpected error while optimizing the query"
+        ) from e
+    finally:
+        logger.info("Finished optimizing query")
+
+        if response:
+            finish_reason = response.choices[0].finish_reason
+            usage = response.usage
+
+            logger.debug(
+                "LLM call finished — model: %s | stop: %s | tokens: %s in / %s out / %s total",
+                response.model,
+                finish_reason,
+                usage.prompt_tokens,
+                usage.completion_tokens,
+                usage.total_tokens,
+            )
+
+    return optimized_query
