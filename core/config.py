@@ -43,7 +43,8 @@ class Settings(BaseSettings):
 
     # Models
     llm_resume_parsing_model: str = "anthropic/claude-haiku-4-5-20251001"
-    llm_query_optimization_model: str = "ollama/llama3.2:3b"
+    llm_query_optimization_model: str = "openai/gpt-4o"
+    llm_query_parsing_model: str = "ollama/llama3"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
@@ -58,6 +59,15 @@ class Settings(BaseSettings):
             temperature=0.4,
             max_tokens=250,
             api_base=self.ollama_api_base,
+        )
+
+    @property
+    def query_parsing_llm(self) -> LLMTaskConfig:
+        return LLMTaskConfig(
+            model=self.llm_query_parsing_model,
+            temperature=0.0,
+            max_tokens=100,
+            max_tries=1,
         )
 
 

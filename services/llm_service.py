@@ -11,9 +11,13 @@ from instructor.exceptions import (
 )
 from litellm import acompletion
 from core.config import settings
-from exceptions import ResumeParsingError, QueryOptimizationError
+from exceptions import (
+    ResumeParsingError,
+    QueryOptimizationError,
+    QueryTermsParsingError,
+)
 from schemas.candidate import CandidateProfileSchema
-from schemas.query import OptimizedQuery
+from schemas.query import ParsedQuery
 from schemas.pdf import PDFContent
 
 logger = logging.getLogger(__name__)
@@ -125,11 +129,11 @@ def _get_query_optimization_system_prompt(n: int) -> str:
     </OPTIMIZATION_MODES>
 
     <RULES>
-        - OUTPUT exactly {n} terms — no more, no less.
+        - OUTPUT exactly {n} terms - no more, no less.
         - Use professional, recruiter-friendly terminology.
-        - Avoid redundancy — each term must be meaningfully distinct.
-        - Preserve the candidate's intent — never replace their terms with unrelated ones.
-        - Do NOT include explanations, preamble, or commentary — only the list.
+        - Avoid redundancy - each term must be meaningfully distinct.
+        - Preserve the candidate's intent - never replace their terms with unrelated ones.
+        - Do NOT include explanations, preamble, or commentary - only the list.
     </RULES>
     """
 
@@ -193,6 +197,7 @@ async def extract_candidate_info(resume: PDFContent) -> CandidateProfileSchema:
             max_retries=cfg.max_tries,
             max_tokens=cfg.max_tokens,
             temperature=cfg.temperature,
+            api_base=cfg.api_base,
         )
     except InstructorRetryException as e:
         logger.error("All %s retries exhausted:", e.n_attempts)
@@ -221,7 +226,7 @@ async def extract_candidate_info(resume: PDFContent) -> CandidateProfileSchema:
             usage = response.usage
 
             logger.debug(
-                "LLM call finished — model: %s | stop: %s | tokens: %s in / %s out / %s total",
+                "LLM call finished - model: %s | stop: %s | tokens: %s in / %s out / %s total",
                 response.model,
                 finish_reason,
                 usage.prompt_tokens,
@@ -232,7 +237,7 @@ async def extract_candidate_info(resume: PDFContent) -> CandidateProfileSchema:
     return candidate_data
 
 
-async def optimize_query(q: str, terms_to_generate: int = 5):
+async def optimize_query(q: str, terms_to_generate: int = 5) -> ParsedQuery:
     """Optimize a job search query using LLM to generate refined search terms.
 
     Args:
@@ -240,7 +245,7 @@ async def optimize_query(q: str, terms_to_generate: int = 5):
         terms_to_generate: Number of optimized terms to generate (default: 5).
 
     Returns:
-        OptimizedQuery containing the list of refined search terms.
+        ParsedQuery containing the list of refined search terms.
 
     Raises:
         QueryOptimizationError: If all retries are exhausted or an unexpected error occurs.
@@ -259,7 +264,7 @@ async def optimize_query(q: str, terms_to_generate: int = 5):
             response,
         ) = await client.chat.completions.create_with_completion(
             model=cfg.model,
-            response_model=OptimizedQuery,
+            response_model=ParsedQuery,
             messages=[
                 {
                     "role": "system",
@@ -273,7 +278,7 @@ async def optimize_query(q: str, terms_to_generate: int = 5):
             temperature=cfg.temperature,
             max_tokens=cfg.max_tokens,
             max_retries=cfg.max_tries,
-            api_base=cfg.api_base,  # None is ignored by litellm for cloud providers
+            api_base=cfg.api_base,
         )
     except InstructorRetryException as e:
         logger.error("All %s retries exhausted:", e.n_attempts)
@@ -300,7 +305,7 @@ async def optimize_query(q: str, terms_to_generate: int = 5):
             usage = response.usage
 
             logger.debug(
-                "LLM call finished — model: %s | stop: %s | tokens: %s in / %s out / %s total",
+                "LLM call finished - model: %s | stop: %s | tokens: %s in / %s out / %s total",
                 response.model,
                 finish_reason,
                 usage.prompt_tokens,
@@ -309,3 +314,76 @@ async def optimize_query(q: str, terms_to_generate: int = 5):
             )
 
     return optimized_query
+
+
+async def parse_query_terms(q: str) -> ParsedQuery:
+    """Parse raw job search query into individual meaningful terms.
+
+    Args:
+        q: Raw job search query string to parse.
+
+    Returns:
+        ParsedQuery containing the list of extracted search terms.
+
+    Raises:
+        QueryTermsParsingError: If all retries are exhausted or an unexpected error occurs.
+    """
+    logger.debug("Parsing query search terms with AI...")
+
+    try:
+        cfg = settings.query_parsing_llm
+        client = _get_client(cfg.model)
+
+        (
+            parsed_query,
+            response,
+        ) = await client.chat.completions.create_with_completion(
+            model=cfg.model,
+            response_model=ParsedQuery,
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a query parser. Return JSON in this exact format: {\"terms\": [...]}. Never nest it. Extract individual meaningful job search terms. Keep compound terms together (e.g., 'fullstack developer' is one term).",
+                },
+                {
+                    "role": "user",
+                    "content": f"Split this job search query into individual meaningful terms: {q}",
+                },
+            ],
+            temperature=cfg.temperature,
+            max_tokens=cfg.max_tokens,
+            max_retries=cfg.max_tries,
+            api_base=cfg.api_base,
+        )
+    except InstructorRetryException as e:
+        logger.error("All %s retries exhausted:", e.n_attempts)
+        for attempt in e.failed_attempts:
+            logger.error("Error: %s", attempt.exception())
+        raise QueryTermsParsingError("Failed to parse query terms after retries") from e
+    except IncompleteOutputException as e:
+        raise QueryTermsParsingError(
+            "LLM has probably hits the max_tokens limit before completing its "
+            "response. Output truncated. Partial data: %s",
+            e.last_completion,
+        ) from e
+    except Exception as e:
+        raise QueryTermsParsingError(
+            "Unexpected error while parsing query terms"
+        ) from e
+    finally:
+        logger.info("Finished parsing query terms")
+
+        if response:
+            finish_reason = response.choices[0].finish_reason
+            usage = response.usage
+
+            logger.debug(
+                "LLM call finished - model: %s | stop: %s | tokens: %s in / %s out / %s total",
+                response.model,
+                finish_reason,
+                usage.prompt_tokens,
+                usage.completion_tokens,
+                usage.total_tokens,
+            )
+
+    return parsed_query
