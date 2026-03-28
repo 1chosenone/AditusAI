@@ -7,6 +7,8 @@ from enums import FieldOfStudyEnum, QualificationTypeEnum
 class CandidateQualificationFieldSchema(BaseModel):
     field: FieldOfStudyEnum
 
+    model_config = {"from_attributes": True}
+
 
 class CandidateQualificationSchema(BaseModel):
     """Represents a candidate's qualification or credential.
@@ -26,3 +28,5 @@ class CandidateQualificationSchema(BaseModel):
     start_year: int | None = None
     end_year: int
     fields: list[CandidateQualificationFieldSchema]
+
+    model_config = {"from_attributes": True}

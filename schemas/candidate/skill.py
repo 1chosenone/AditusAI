@@ -14,3 +14,5 @@ class CandidateSkillSchema(BaseModel):
 
     name: str
     proficiency: SkillProficiency | None = None
+
+    model_config = {"from_attributes": True}

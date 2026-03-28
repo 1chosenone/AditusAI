@@ -14,3 +14,5 @@ class CandidateLanguageSchema(BaseModel):
 
     name: str
     proficiency: LanguageProficiency | None = None
+
+    model_config = {"from_attributes": True}

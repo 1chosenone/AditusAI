@@ -14,3 +14,5 @@ class CandidateSenioritySchema(BaseModel):
 
     level: SeniorityLevel | None = None
     years_of_experience: float | None = None
+
+    model_config = {"from_attributes": True}

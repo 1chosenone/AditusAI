@@ -34,3 +34,5 @@ class CandidateExperienceSchema(BaseModel):
     start_month: int | None
     end_year: int | None = None
     end_month: int | None
+
+    model_config = {"from_attributes": True}
