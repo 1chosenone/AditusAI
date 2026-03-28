@@ -7,6 +7,7 @@ from .candidate import (
     CandidateQualificationSchema,
     CandidateLanguageSchema,
     CandidateSenioritySchema,
+    CandidateSkillSchema,
 )
 
 
@@ -52,6 +53,7 @@ class CandidateResponse(BaseModel):
     qualifications: list[CandidateQualificationSchema] | None
     languages: list[CandidateLanguageSchema] | None
     seniority: CandidateSenioritySchema | None
+    skills: list[CandidateSkillSchema] | None
 
     model_config = {"from_attributes": True}
 
