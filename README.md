@@ -75,7 +75,7 @@ uv run fastapi dev main.py
 
 ### 3. Start Redis worker (in a separate terminal)
 ```bash
-uv run rq worker default
+python -m core.worker
 ```
 
 
