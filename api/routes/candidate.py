@@ -114,7 +114,7 @@ def fetch_jobs_for_candidate(
     Raises:
         HTTPException: 404 if candidate is not found.
     """
-    candidate = get_candidate_by_id(db, candidate_id)
+    candidate = CandidateResponse.model_validate(get_candidate_by_id(db, candidate_id))
     if not candidate:
         raise HTTPException(status_code=404, detail="Candidate not found")
 
