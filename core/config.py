@@ -10,11 +10,21 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class LLMTaskConfig(BaseModel):
+    """Configuration for LLM task execution.
+
+    Attributes:
+        model: Model identifier for the LLM.
+        temperature: Sampling temperature (default: 0.3).
+        max_tokens: Maximum tokens in the response (default: 10,000).
+        max_tries: Maximum number of retry attempts (default: 3).
+        api_base: API base URL for Ollama (default: None).
+    """
+
     model: str
     temperature: float = 0.3
     max_tokens: int = 10_000
     max_tries: int = 3
-    api_base: str | None = None  # only needed for Ollama
+    api_base: str | None = None
 
 
 class Settings(BaseSettings):
@@ -22,9 +32,16 @@ class Settings(BaseSettings):
 
     Attributes:
         database_url: Database connection URL.
+        redis_url: Redis connection URL.
+        n8n_job_search_webhook_url: Webhook URL for n8n job search.
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).
         anthropic_api_key: API key for Anthropic LLM service.
-        model: Model identifier for the LLM.
+        openai_api_key: API key for OpenAI LLM service.
+        ollama_api_base: API base URL for Ollama.
+        llm_resume_parsing_model: Model for resume parsing.
+        llm_query_optimization_model: Model for query optimization.
+        llm_query_parsing_model: Model for query parsing.
+        llm_query_inference_model: Model for query inference from skills.
     """
 
     # Database config
@@ -32,6 +49,9 @@ class Settings(BaseSettings):
 
     # Redis config
     redis_url: str
+
+    # n8n webhooks
+    n8n_job_search_webhook_url: str
 
     # Logging config
     log_level: str = "DEBUG"
@@ -51,10 +71,12 @@ class Settings(BaseSettings):
 
     @property
     def parsing_llm(self) -> LLMTaskConfig:
+        """Get LLM config for resume parsing."""
         return LLMTaskConfig(model=self.llm_resume_parsing_model)
 
     @property
     def query_optimization_llm(self) -> LLMTaskConfig:
+        """Get LLM config for query optimization."""
         return LLMTaskConfig(
             model=self.llm_query_optimization_model,
             temperature=0.4,
@@ -64,6 +86,7 @@ class Settings(BaseSettings):
 
     @property
     def query_parsing_llm(self) -> LLMTaskConfig:
+        """Get LLM config for query parsing."""
         return LLMTaskConfig(
             model=self.llm_query_parsing_model,
             temperature=0.0,
@@ -73,6 +96,7 @@ class Settings(BaseSettings):
 
     @property
     def query_inference_llm(self) -> LLMTaskConfig:
+        """Get LLM config for query inference from skills."""
         return LLMTaskConfig(
             model=self.llm_query_inference_model,
             temperature=0.3,
